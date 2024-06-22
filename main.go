@@ -19,9 +19,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/joelvaneenwyk/sigtop/signal"
 	"github.com/tbvdm/go-cli"
 	"github.com/tbvdm/go-openbsd"
-	"github.com/tbvdm/sigtop/signal"
 )
 
 type cmdStatus int

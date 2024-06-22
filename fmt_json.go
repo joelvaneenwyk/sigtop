@@ -17,8 +17,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/tbvdm/sigtop/errio"
-	"github.com/tbvdm/sigtop/signal"
+	"github.com/joelvaneenwyk/sigtop/errio"
+	"github.com/joelvaneenwyk/sigtop/signal"
 )
 
 func jsonWriteMessages(ew *errio.Writer, msgs []signal.Message) error {

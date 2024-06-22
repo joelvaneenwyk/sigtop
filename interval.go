@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tbvdm/sigtop/signal"
+	"github.com/joelvaneenwyk/sigtop/signal"
 )
 
 func parseInterval(str string) (signal.Interval, error) {
@@ -39,7 +39,7 @@ func parseInterval(str string) (signal.Interval, error) {
 		return signal.Interval{}, err
 	}
 
-	return signal.Interval{min, max}, nil
+	return signal.Interval{Min: min, Max: max}, nil
 }
 
 func parseTime(str string, max bool) (time.Time, error) {

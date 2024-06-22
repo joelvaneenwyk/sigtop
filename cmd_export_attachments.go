@@ -26,10 +26,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/joelvaneenwyk/sigtop/at"
+	"github.com/joelvaneenwyk/sigtop/getopt"
+	"github.com/joelvaneenwyk/sigtop/signal"
 	"github.com/tbvdm/go-openbsd"
-	"github.com/tbvdm/sigtop/at"
-	"github.com/tbvdm/sigtop/getopt"
-	"github.com/tbvdm/sigtop/signal"
 )
 
 const incrementalFile = ".incremental"

@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tbvdm/sigtop/sqlcipher"
+	"github.com/joelvaneenwyk/sigtop/sqlcipher"
 )
 
 type Context struct {
