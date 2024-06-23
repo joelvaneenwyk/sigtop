@@ -1,17 +1,17 @@
 # Summary
 
-Every file on this branch of the sigtop repository is
+Every file on this branch of the `sigtop` repository is
 
-- licensed under the ISC license,
-- licensed under a BSD license, or
-- placed in the public domain.
+- Licensed under the ISC license,
+- Licensed under a BSD license, or
+- Placed in the public domain.
 
-# Details
+## Details
 
-Except for the files specified below, every file on this branch of the sigtop
+Except for the files specified below, every file on this branch of the `sigtop`
 repository is licensed under the ISC license, as follows:
 
-```
+```license
 Copyright (c) 2021 Tim van der Molen <tim@kariliq.nl>
 
 Permission to use, copy, modify, and distribute this software for any
@@ -27,14 +27,16 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ```
 
+### SQLite
+
 The files `sqlite3.c` and `sqlite3.h` are amalgamations of separate files, each
 of which is either
 
-- placed in the public domain,
-- licensed under the ISC license, as above, or
-- licensed under the 3-clause BSD license, as follows:
+- Placed in the public domain,
+- Licensed under the ISC license, as above, or
+- Licensed under the 3-clause BSD license, as follows:
 
-```
+```license
 Copyright (c) 2008, ZETETIC LLC
 All rights reserved.
 
