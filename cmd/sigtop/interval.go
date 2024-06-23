@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joelvaneenwyk/sigtop/signal"
+	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 )
 
 func parseInterval(str string) (signal.Interval, error) {

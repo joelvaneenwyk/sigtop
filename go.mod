@@ -10,4 +10,4 @@ require (
 	golang.org/x/text v0.16.0
 )
 
-replace github.com/joelvaneenwyk/sigtop => ../
+replace github.com/joelvaneenwyk/sigtop => ../../

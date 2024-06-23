@@ -18,7 +18,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/joelvaneenwyk/sigtop/cmds"
+	"github.com/joelvaneenwyk/sigtop/cmd/sigtop"
 	"github.com/tbvdm/go-cli"
 )
 

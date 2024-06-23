@@ -21,7 +21,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/joelvaneenwyk/sigtop/sqlcipher"
+	"github.com/joelvaneenwyk/sigtop/pkg/sqlcipher"
 )
 
 const (

@@ -19,8 +19,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joelvaneenwyk/sigtop/errio"
-	"github.com/joelvaneenwyk/sigtop/signal"
+	"github.com/joelvaneenwyk/sigtop/pkg/errio"
+	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 )
 
 func textShortWriteMessages(ew *errio.Writer, msgs []signal.Message) error {

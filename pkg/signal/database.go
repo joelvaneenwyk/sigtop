@@ -17,7 +17,7 @@ package signal
 import (
 	"fmt"
 
-	"github.com/joelvaneenwyk/sigtop/sqlcipher"
+	"github.com/joelvaneenwyk/sigtop/pkg/sqlcipher"
 )
 
 func (c *Context) CheckDatabase() ([]string, error) {

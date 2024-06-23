@@ -3,7 +3,7 @@ package cmds
 import (
 	"path/filepath"
 
-	"github.com/joelvaneenwyk/sigtop/signal"
+	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
 )
 

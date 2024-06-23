@@ -21,9 +21,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/joelvaneenwyk/sigtop/at"
-	"github.com/joelvaneenwyk/sigtop/getopt"
-	"github.com/joelvaneenwyk/sigtop/signal"
+	"github.com/joelvaneenwyk/sigtop/pkg/at"
+	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
+	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
 )
 
