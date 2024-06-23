@@ -1,6 +1,6 @@
 module github.com/joelvaneenwyk/sigtop
 
-go 1.22.4
+go 1.18
 
 require (
 	github.com/tbvdm/go-cli v0.1.0
