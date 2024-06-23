@@ -1,6 +1,6 @@
 module github.com/joelvaneenwyk/sigtop
 
-go 1.19
+go 1.22.4
 
 require (
 	github.com/tbvdm/go-cli v0.1.0
@@ -9,3 +9,5 @@ require (
 	golang.org/x/sys v0.21.0
 	golang.org/x/text v0.16.0
 )
+
+replace github.com/joelvaneenwyk/sigtop => ../

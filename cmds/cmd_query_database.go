@@ -1,4 +1,4 @@
-// Copyright (c) 2021, 2023 Tim van der Molen <tim@kariliq.nl>
+// Copyright (c) 2023 Tim van der Molen <tim@kariliq.nl>
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -12,25 +12,26 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package main
+package cmds
 
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/joelvaneenwyk/sigtop/getopt"
 	"github.com/joelvaneenwyk/sigtop/signal"
 	"github.com/tbvdm/go-openbsd"
 )
 
-var cmdCheckDatabaseEntry = cmdEntry{
-	name:  "check-database",
-	alias: "check",
-	usage: "[-d signal-directory]",
-	exec:  cmdCheckDatabase,
+var cmdQueryDatabaseEntry = cmdEntry{
+	Name:  "query-database",
+	Alias: "query",
+	Usage: "[-d signal-directory] query",
+	Execute:  cmdQueryDatabase,
 }
 
-func cmdCheckDatabase(args []string) cmdStatus {
+func cmdQueryDatabase(args []string) cmdStatus {
 	getopt.ParseArgs("d:", args)
 
 	var dArg getopt.Arg
@@ -45,9 +46,12 @@ func cmdCheckDatabase(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
-	if len(getopt.Args()) != 0 {
-		return cmdUsage
+	args = getopt.Args()
+	if len(args) != 1 {
+		return CommandUsage
 	}
+
+	query := args[0]
 
 	var signalDir string
 	if dArg.Set() {
@@ -79,18 +83,15 @@ func cmdCheckDatabase(args []string) cmdStatus {
 	}
 	defer ctx.Close()
 
-	results, err := ctx.CheckDatabase()
+	rows, err := ctx.QueryDatabase(query)
 	if err != nil {
 		log.Print(err)
-		return cmdError
+		return CommandError
 	}
 
-	if len(results) > 0 {
-		for _, s := range results {
-			fmt.Println(s)
-		}
-		return cmdError
+	for _, cols := range rows {
+		fmt.Println(strings.Join(cols, "|"))
 	}
 
-	return cmdOK
+	return CommandOk
 }

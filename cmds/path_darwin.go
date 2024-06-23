@@ -1,4 +1,4 @@
-// Copyright (c) 2021, 2023 Tim van der Molen <tim@kariliq.nl>
+// Copyright (c) 2024 Tim van der Molen <tim@kariliq.nl>
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -12,24 +12,36 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package main
+package cmds
 
 import (
-	"fmt"
+	"os"
+	"unicode"
 
-	"github.com/joelvaneenwyk/sigtop/errio"
-	"github.com/joelvaneenwyk/sigtop/signal"
+	"golang.org/x/text/unicode/rangetable"
 )
 
-func jsonWriteMessages(ew *errio.Writer, msgs []signal.Message) error {
-	fmt.Fprintln(ew, "[")
-	for i, msg := range msgs {
-		fmt.Fprint(ew, msg.JSON)
-		if i+1 < len(msgs) {
-			fmt.Fprint(ew, ",")
-		}
-		fmt.Fprintln(ew)
+var unicode9 *unicode.RangeTable
+
+func init() {
+	unicode9 = rangetable.Assigned("9.0.0")
+	if unicode9 == nil {
+		panic("cannot get range table")
 	}
-	fmt.Fprintln(ew, "]")
-	return ew.Err()
+}
+
+func sanitiseFilename(name string) string {
+	if name == "" || name == "." || name == ".." {
+		return name + "_"
+	}
+
+	runes := []rune(name)
+	for i, r := range runes {
+		// Note that APFS allows only Unicode 9.0 characters
+		if r == os.PathSeparator || unicode.IsControl(r) || !unicode.Is(unicode9, r) {
+			runes[i] = '_'
+		}
+	}
+
+	return string(runes)
 }

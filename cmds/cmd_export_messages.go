@@ -12,7 +12,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package main
+package cmds
 
 import (
 	"errors"
@@ -41,10 +41,10 @@ type msgMode struct {
 }
 
 var cmdExportMessagesEntry = cmdEntry{
-	name:  "export-messages",
-	alias: "msg",
-	usage: "[-i] [-c conversation] [-d signal-directory] [-f format] [-s interval] [directory]",
-	exec:  cmdExportMessages,
+	Name:  "export-messages",
+	Alias: "msg",
+	Usage: "[-i] [-c conversation] [-d signal-directory] [-f format] [-s interval] [directory]",
+	Execute:  cmdExportMessages,
 }
 
 func cmdExportMessages(args []string) cmdStatus {
@@ -95,7 +95,7 @@ func cmdExportMessages(args []string) cmdStatus {
 			log.Fatal(err)
 		}
 	default:
-		return cmdUsage
+		return CommandUsage
 	}
 
 	var signalDir string
@@ -142,10 +142,10 @@ func cmdExportMessages(args []string) cmdStatus {
 	defer ctx.Close()
 
 	if !exportMessages(ctx, exportDir, mode, selectors, ival) {
-		return cmdError
+		return CommandError
 	}
 
-	return cmdOK
+	return CommandOk
 }
 
 func exportMessages(ctx *signal.Context, dir string, mode msgMode, selectors []string, ival signal.Interval) bool {

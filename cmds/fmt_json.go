@@ -12,26 +12,24 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-//go:build !(darwin || windows)
-
-package main
+package cmds
 
 import (
-	"os"
-	"unicode"
+	"fmt"
+
+	"github.com/joelvaneenwyk/sigtop/errio"
+	"github.com/joelvaneenwyk/sigtop/signal"
 )
 
-func sanitiseFilename(name string) string {
-	if name == "" || name == "." || name == ".." {
-		return name + "_"
-	}
-
-	runes := []rune(name)
-	for i, r := range runes {
-		if r == os.PathSeparator || unicode.IsControl(r) {
-			runes[i] = '_'
+func jsonWriteMessages(ew *errio.Writer, msgs []signal.Message) error {
+	fmt.Fprintln(ew, "[")
+	for i, msg := range msgs {
+		fmt.Fprint(ew, msg.JSON)
+		if i+1 < len(msgs) {
+			fmt.Fprint(ew, ",")
 		}
+		fmt.Fprintln(ew)
 	}
-
-	return string(runes)
+	fmt.Fprintln(ew, "]")
+	return ew.Err()
 }

@@ -12,7 +12,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package main
+package cmds
 
 import (
 	"bytes"
@@ -28,10 +28,10 @@ import (
 )
 
 var cmdExportAvatarsEntry = cmdEntry{
-	name:  "export-avatars",
-	alias: "avt",
-	usage: "[-Ll] [-c conversation] [-d signal-directory] [directory]",
-	exec:  cmdExportAvatars,
+	Name:  "export-avatars",
+	Alias: "avt",
+	Usage: "[-Ll] [-c conversation] [-d signal-directory] [directory]",
+	Execute:  cmdExportAvatars,
 }
 
 func cmdExportAvatars(args []string) cmdStatus {
@@ -68,7 +68,7 @@ func cmdExportAvatars(args []string) cmdStatus {
 			log.Fatal(err)
 		}
 	default:
-		return cmdUsage
+		return CommandUsage
 	}
 
 	var signalDir string
@@ -106,10 +106,10 @@ func cmdExportAvatars(args []string) cmdStatus {
 	defer ctx.Close()
 
 	if !exportAvatars(ctx, exportDir, mode, selectors) {
-		return cmdError
+		return CommandError
 	}
 
-	return cmdOK
+	return CommandOk
 }
 
 func exportAvatars(ctx *signal.Context, dir string, mode exportMode, selectors []string) bool {

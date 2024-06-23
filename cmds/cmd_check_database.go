@@ -12,31 +12,30 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package main
+package cmds
 
 import (
+	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/joelvaneenwyk/sigtop/getopt"
 	"github.com/joelvaneenwyk/sigtop/signal"
 	"github.com/tbvdm/go-openbsd"
 )
 
-var cmdExportDatabaseEntry = cmdEntry{
-	name:  "export-database",
-	alias: "db",
-	usage: "[-d signal-directory] file",
-	exec:  cmdExportDatabase,
+var cmdCheckDatabaseEntry = cmdEntry{
+	Name:  "check-database",
+	Alias: "check",
+	Usage: "[-d signal-directory]",
+	Execute:  cmdCheckDatabase,
 }
 
-func cmdExportDatabase(args []string) cmdStatus {
+func cmdCheckDatabase(args []string) cmdStatus {
 	getopt.ParseArgs("d:", args)
 
 	var dArg getopt.Arg
 	for getopt.Next() {
-		switch getopt.Option() {
+		switch opt := getopt.Option(); opt {
 		case 'd':
 			dArg = getopt.OptionArg()
 		}
@@ -46,12 +45,9 @@ func cmdExportDatabase(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
-	args = getopt.Args()
-	if len(args) != 1 {
-		return cmdUsage
+	if len(getopt.Args()) != 0 {
+		return CommandUsage
 	}
-
-	dbFile := args[0]
 
 	var signalDir string
 	if dArg.Set() {
@@ -68,11 +64,6 @@ func cmdExportDatabase(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
-	// For the export database and its temporary files
-	if err := openbsd.Unveil(filepath.Dir(dbFile), "rwc"); err != nil {
-		log.Fatal(err)
-	}
-
 	// For SQLite/SQLCipher
 	if err := openbsd.Unveil("/dev/urandom", "r"); err != nil {
 		log.Fatal(err)
@@ -82,24 +73,24 @@ func cmdExportDatabase(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
-	// SQLite/SQLCipher unconditionally overwrites existing files, so fail
-	// here if the export database already exists
-	f, err := os.OpenFile(dbFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	f.Close()
-
 	ctx, err := signal.Open(signalDir)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer ctx.Close()
 
-	if err = ctx.WriteDatabase(dbFile); err != nil {
+	results, err := ctx.CheckDatabase()
+	if err != nil {
 		log.Print(err)
-		return cmdError
+		return CommandError
 	}
 
-	return cmdOK
+	if len(results) > 0 {
+		for _, s := range results {
+			fmt.Println(s)
+		}
+		return CommandError
+	}
+
+	return CommandOk
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Tim van der Molen <tim@kariliq.nl>
+// Copyright (c) 2021, 2023 Tim van der Molen <tim@kariliq.nl>
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -12,31 +12,31 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package main
+package cmds
 
 import (
-	"fmt"
 	"log"
-	"strings"
+	"os"
+	"path/filepath"
 
 	"github.com/joelvaneenwyk/sigtop/getopt"
 	"github.com/joelvaneenwyk/sigtop/signal"
 	"github.com/tbvdm/go-openbsd"
 )
 
-var cmdQueryDatabaseEntry = cmdEntry{
-	name:  "query-database",
-	alias: "query",
-	usage: "[-d signal-directory] query",
-	exec:  cmdQueryDatabase,
+var cmdExportDatabaseEntry = cmdEntry{
+	Name:  "export-database",
+	Alias: "db",
+	Usage: "[-d signal-directory] file",
+	Execute:  cmdExportDatabase,
 }
 
-func cmdQueryDatabase(args []string) cmdStatus {
+func cmdExportDatabase(args []string) cmdStatus {
 	getopt.ParseArgs("d:", args)
 
 	var dArg getopt.Arg
 	for getopt.Next() {
-		switch opt := getopt.Option(); opt {
+		switch getopt.Option() {
 		case 'd':
 			dArg = getopt.OptionArg()
 		}
@@ -48,10 +48,10 @@ func cmdQueryDatabase(args []string) cmdStatus {
 
 	args = getopt.Args()
 	if len(args) != 1 {
-		return cmdUsage
+		return CommandUsage
 	}
 
-	query := args[0]
+	dbFile := args[0]
 
 	var signalDir string
 	if dArg.Set() {
@@ -68,6 +68,11 @@ func cmdQueryDatabase(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
+	// For the export database and its temporary files
+	if err := openbsd.Unveil(filepath.Dir(dbFile), "rwc"); err != nil {
+		log.Fatal(err)
+	}
+
 	// For SQLite/SQLCipher
 	if err := openbsd.Unveil("/dev/urandom", "r"); err != nil {
 		log.Fatal(err)
@@ -77,21 +82,24 @@ func cmdQueryDatabase(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
+	// SQLite/SQLCipher unconditionally overwrites existing files, so fail
+	// here if the export database already exists
+	f, err := os.OpenFile(dbFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	f.Close()
+
 	ctx, err := signal.Open(signalDir)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer ctx.Close()
 
-	rows, err := ctx.QueryDatabase(query)
-	if err != nil {
+	if err = ctx.WriteDatabase(dbFile); err != nil {
 		log.Print(err)
-		return cmdError
+		return CommandError
 	}
 
-	for _, cols := range rows {
-		fmt.Println(strings.Join(cols, "|"))
-	}
-
-	return cmdOK
+	return CommandOk
 }

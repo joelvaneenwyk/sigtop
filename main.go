@@ -17,36 +17,10 @@ package main
 import (
 	"log"
 	"os"
-	"path/filepath"
 
-	"github.com/joelvaneenwyk/sigtop/signal"
+	"github.com/joelvaneenwyk/sigtop/cmds"
 	"github.com/tbvdm/go-cli"
-	"github.com/tbvdm/go-openbsd"
 )
-
-type cmdStatus int
-
-const (
-	cmdOK cmdStatus = iota
-	cmdError
-	cmdUsage
-)
-
-type cmdEntry struct {
-	name  string
-	alias string
-	usage string
-	exec  func([]string) cmdStatus
-}
-
-var cmdEntries = []cmdEntry{
-	cmdCheckDatabaseEntry,
-	cmdExportAvatarsEntry,
-	cmdExportAttachmentsEntry,
-	cmdExportDatabaseEntry,
-	cmdExportMessagesEntry,
-	cmdQueryDatabaseEntry,
-}
 
 func main() {
 	cli.SetLog()
@@ -55,50 +29,15 @@ func main() {
 		cli.ExitUsage("command", "[argument ...]")
 	}
 
-	cmd := command(os.Args[1])
+	cmd := cmds.Command(os.Args[1])
 	if cmd == nil {
 		log.Fatalln("invalid command:", os.Args[1])
 	}
 
-	switch cmd.exec(os.Args[2:]) {
-	case cmdError:
+	switch cmd.Execute(os.Args[2:]) {
+	case cmds.CommandError:
 		os.Exit(1)
-	case cmdUsage:
-		cli.ExitUsage(cmd.name, cmd.usage)
+	case cmds.CommandUsage:
+		cli.ExitUsage(cmd.Name, cmd.Usage)
 	}
-}
-
-func command(name string) *cmdEntry {
-	for _, cmd := range cmdEntries {
-		if name == cmd.name || name == cmd.alias {
-			return &cmd
-		}
-	}
-	return nil
-}
-
-func unveilSignalDir(dir string) error {
-	if err := openbsd.Unveil(dir, "r"); err != nil {
-		return err
-	}
-
-	// SQLite/SQLCipher needs to create the WAL and shared-memory files if
-	// they don't exist already. See https://www.sqlite.org/tempfiles.html.
-
-	walFile := filepath.Join(dir, signal.DatabaseFile+"-wal")
-	shmFile := filepath.Join(dir, signal.DatabaseFile+"-shm")
-
-	if err := openbsd.Unveil(walFile, "rwc"); err != nil {
-		return err
-	}
-
-	if err := openbsd.Unveil(shmFile, "rwc"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func recipientFilename(rpt *signal.Recipient, ext string) string {
-	return sanitiseFilename(rpt.DetailedDisplayName() + ext)
 }
