@@ -43,7 +43,7 @@ tasks:
         vars: { TARGET_DIR: '{{.BUILD_DIR}}' }
 
   build:
-    deps: [git-submodule-init, goreleaser-install]
+    deps: [sqlcipher, goreleaser-install]
     preconditions:
       - '"{{ fromSlash .GORELEASER }}" --version'
     sources:
@@ -60,44 +60,84 @@ tasks:
     cmds:
       - cmd: goreleaser build --single-target --snapshot --clean
 
-  sqlcipher-build:
-    deps: [git-submodule-init]
-    dir: pkg/sqlcipher/src
+  sqlcipher:
+    deps: [sqlcipher-compile]
+    sources:
+      - .build/bld/sqlite3.c
+      - .build/bld/sqlite3.h
+    generates:
+      - pkg/sqlcipher/sqlite3.c
+      - pkg/sqlcipher/sqlite3.h
     cmds:
-      - cmd: ./configure --enable-tempstore=yes --enable-json1 --enable-fts5 --enable-fts3 --enable-fts4 --enable-rtree --enable-shared --disable-amalgamation
-      - cmd: make
+      - cmd: cp .build/bld/sqlite3.c pkg/sqlcipher/sqlite3.c
+      - cmd: cp .build/bld/sqlite3.h pkg/sqlcipher/sqlite3.h
 
-  sqlcipher-patch:
+  sqlcipher-clone:
+    deps: [git-submodule-init]
+    status:
+      - test -d .build/sqlcipher/
+      - test -f .build/sqlcipher/.git/index
+      - test -f .build/sqlcipher/.gitignore
+    generates:
+      - .build/sqlcipher/.git/index
+      - .build/sqlcipher/.gitignore
     cmds:
+      - cmd: mkdir -p "{{ joinPath .TASKFILE_DIR ".build" }}"
       - cmd: |
-          git submodule deinit -f .
-          git submodule update --init
-      - cmd: |
-          cd "{{ joinPath .TASKFILE_DIR "pkg" "sqlcipher" "src" }}"
-          patch -N -i "{{ joinPath .TASKFILE_DIR "pkg" "sqlcipher" "sqlcipher.diff" }}"
-      - cmd: |
-          cd "{{ joinPath .TASKFILE_DIR "pkg" "sqlcipher" "src" }}"
-          ./configure --enable-tempstore=yes CFLAGS=-DSQLITE_HAS_CODEC
-      
-  sqlcipher-make:
-    aliases: [sql]
-    # deps: [sqlcipher-patch]
-    cmds:
-      - cmd: mkdir -p .build
-      - cmd: |
-          cd .build
-          if [ ! test -d "sqlcipher" ]; then
-            git clone -b v4.5.7 https://github.com/sqlcipher/sqlcipher.git
+          if [ ! test -d "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" ]; then
+            git clone -b v4.5.7 https://github.com/sqlcipher/sqlcipher.git "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}"
           fi
+
+  sqlcipher-configure:
+    deps: [sqlcipher-clone]
+    sources:
+      - .build/sqlcipher/configure
+    generates:
+      - .build/bld/Makefile
+    vars:
+      BUILD_DIR: '{{ joinPath .TASKFILE_DIR ".build" }}'
+      CONFIGURE: '{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" "configure" }}'
+    cmds:
       - cmd: |
-          cd .build
-          mkdir -p bld
-          cd bld
-          ./../sqlcipher/configure  --enable-tempstore=yes CFLAGS=-DSQLITE_HAS_CODEC
+          mkdir -p  "{{ fromSlash .BUILD_DIR }}"
+          cd  "{{ fromSlash .BUILD_DIR }}"
+          "{{ fromSlash .CONFIGURE }}" \
+            --enable-tempstore=yes CFLAGS=-DSQLITE_HAS_CODEC
+
+  sqlcipher-patched:
+    deps: [sqlcipher-clone]
+    sources:
+      - pkg/sqlcipher/sqlcipher.diff
+    generates:
+      - .build/sqlcipher/Makefile.in
+      - .build/sqlcipher/src/crypto.h
+      - .build/sqlcipher/src/crypto_go.c
+      - .build/sqlcipher/src/crypto_impl.c
+      - .build/sqlcipher/tool/mksqlite3c.tcl
+    cmds:
+      - cmd: |
+          patch \
+            --directory="{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" \
+            --posix \
+            --verbose \
+            --strip=0 \
+            --force \
+            -i "{{ joinPath .TASKFILE_DIR "pkg" "sqlcipher" "sqlcipher.diff" }}"
+
+  sqlcipher-compile:
+    deps: [sqlcipher-patched]
+    sources:
+      - .build/bld/Makefile
+      - .build/sqlcipher/**/*.c
+      - .build/sqlcipher/**/*.h
+    generates:
+      - .build/bld/sqlite3.c
+      - .build/bld/sqlite3.h
+    cmds:
       - cmd: |
           cd .build/bld/
           make sqlite3.c
-      
+
   goreleaser-install:
     deps: [goreleaser-install-brew]
     desc: Install goreleaser
@@ -130,10 +170,16 @@ tasks:
         ignore_error: true
 
   git-submodule-init:
-    status:
-      - test -f pkg/sqlcipher/src/.gitignore
+    sources:
+      - .gitmodules
+    generates:
+      - .build/logs/git-submodule-init.log
     cmds:
-      - cmd: 'git -C "{{.TASKFILE_DIR}}" submodule update --init --recursive'
+      - cmd: |
+          git -C "{{.TASKFILE_DIR}}" submodule update --init --recursive
+      - cmd: |
+          mkdir -p .build/logs
+          touch .build/logs/git-submodule-init.log
 
   vcpkg-integrate:
     deps: [vcpkg-download]
