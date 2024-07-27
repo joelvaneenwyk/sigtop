@@ -1,0 +1,10 @@
+version: "0.2"
+ignorePaths:
+  - dist/
+  - .task/
+dictionaryDefinitions:
+  - name: sigtop
+    path: ./.github/config/sigtop.dict
+    addWords: true
+dictionaries:
+  - sigtop
