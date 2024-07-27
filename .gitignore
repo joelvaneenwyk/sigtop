@@ -5,3 +5,4 @@
 dist/
 .task/
 .idea/
+.build/
