@@ -28,8 +28,7 @@ vars:
   MSBUILD_EXE: '{{fromSlash .MSBUILD_EXE_RAW}}'
   GORELEASER: 'goreleaser'
 
-  BUILD_INT_DIR: "{{.TASKFILE_DIR}}/dist"
-  BUILD_DIR: "{{fromSlash .BUILD_INT_DIR}}"
+  BUILD_DIR: .build
 
 env:
   VCPKG_DISABLE_METRICS: 1
@@ -37,6 +36,11 @@ env:
 tasks:
   default:
     cmds:
+      - task: build
+
+  rebuild:
+    cmds:
+      - task: clean
       - task: build
 
   clean:
@@ -65,29 +69,30 @@ tasks:
   sqlcipher:
     deps: [sqlcipher-compile]
     sources:
-      - .build/bld/sqlite3.c
-      - .build/bld/sqlite3.h
+      - '{{.BUILD_DIR}}/bld/sqlite3.c'
+      - '{{.BUILD_DIR}}/bld/sqlite3.h'
     generates:
       - pkg/sqlcipher/sqlite3.c
       - pkg/sqlcipher/sqlite3.h
     cmds:
-      - cmd: cp .build/bld/sqlite3.c pkg/sqlcipher/sqlite3.c
-      - cmd: cp .build/bld/sqlite3.h pkg/sqlcipher/sqlite3.h
+      - cmd: cp -f {{.BUILD_DIR}}/bld/sqlite3.[ch] pkg/sqlcipher/
 
   sqlcipher-clone:
     deps: [git-submodule-init]
     status:
-      - test -d .build/sqlcipher/
-      - test -f .build/sqlcipher/.git/index
-      - test -f .build/sqlcipher/.gitignore
+      - test -f {{.BUILD_DIR}}/sqlcipher/.git/index
+      - test -f {{.BUILD_DIR}}/sqlcipher/.gitignore
     generates:
-      - .build/sqlcipher/.git/index
-      - .build/sqlcipher/.gitignore
+      - '{{.BUILD_DIR}}/sqlcipher/.git/index'
+      - '{{.BUILD_DIR}}/sqlcipher/.gitignore'
     cmds:
-      - cmd: mkdir -p "{{ joinPath .TASKFILE_DIR ".build" }}"
+      - cmd: mkdir -p "{{ joinPath .TASKFILE_DIR .BUILD_DIR }}"
       - cmd: |
-          if [ ! test -d "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" ]; then
-            git clone -b "{{.SQLCIPHER_RELEASE_TAG}}" https://github.com/sqlcipher/sqlcipher.git "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}"
+          if [ ! -d "{{ joinPath .TASKFILE_DIR .BUILD_DIR "sqlcipher" }}" ]; then
+            git clone \
+              -b "{{.SQLCIPHER_RELEASE_TAG}}" \
+              https://github.com/sqlcipher/sqlcipher.git \
+              "{{ joinPath .TASKFILE_DIR .BUILD_DIR "sqlcipher" }}"
           fi
 
   sqlcipher-patched:
@@ -95,19 +100,19 @@ tasks:
     sources:
       - pkg/sqlcipher/sqlcipher.diff
     generates:
-      - .build/sqlcipher/Makefile.in
-      - .build/sqlcipher/src/crypto.h
-      - .build/sqlcipher/src/crypto_go.c
-      - .build/sqlcipher/src/crypto_impl.c
-      - .build/sqlcipher/tool/mksqlite3c.tcl
+      - '{{.BUILD_DIR}}/sqlcipher/Makefile.in'
+      - '{{.BUILD_DIR}}/sqlcipher/src/crypto.h'
+      - '{{.BUILD_DIR}}/sqlcipher/src/crypto_go.c'
+      - '{{.BUILD_DIR}}/sqlcipher/src/crypto_impl.c'
+      - '{{.BUILD_DIR}}/sqlcipher/tool/mksqlite3c.tcl'
     cmds:
       - cmd: |
-          git -C "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" clean -xfd
+          git -C "{{ joinPath .TASKFILE_DIR .BUILD_DIR "sqlcipher" }}" clean -xfd
       - cmd: |
-          git -C "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" reset --hard "{{.SQLCIPHER_RELEASE_TAG}}"
+          git -C "{{ joinPath .TASKFILE_DIR .BUILD_DIR "sqlcipher" }}" reset --hard "{{.SQLCIPHER_RELEASE_TAG}}"
       - cmd: |
           patch \
-            --directory="{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" \
+            --directory="{{ joinPath .TASKFILE_DIR .BUILD_DIR "sqlcipher" }}" \
             --verbose \
             --strip=0 \
             --batch \
@@ -116,12 +121,12 @@ tasks:
   sqlcipher-configure:
     deps: [sqlcipher-patched]
     sources:
-      - .build/sqlcipher/configure
+      - '{{.BUILD_DIR}}/sqlcipher/configure'
     generates:
-      - .build/bld/Makefile
+      - '{{.BUILD_DIR}}/bld/Makefile'
     vars:
-      BUILD_DIR: '{{ joinPath .TASKFILE_DIR ".build" }}'
-      CONFIGURE: '{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" "configure" }}'
+      BUILD_DIR: '{{ joinPath .TASKFILE_DIR .BUILD_DIR }}'
+      CONFIGURE: '{{ joinPath .TASKFILE_DIR .BUILD_DIR "sqlcipher" "configure" }}'
     cmds:
       - cmd: |
           mkdir -p  "{{ fromSlash .BUILD_DIR }}"
@@ -132,15 +137,15 @@ tasks:
   sqlcipher-compile:
     deps: [sqlcipher-configure]
     sources:
-      - .build/bld/Makefile
-      - .build/sqlcipher/**/*.c
-      - .build/sqlcipher/**/*.h
+      - '{{.BUILD_DIR}}/bld/Makefile'
+      - '{{.BUILD_DIR}}/sqlcipher/**/*.c'
+      - '{{.BUILD_DIR}}/sqlcipher/**/*.h'
     generates:
-      - .build/bld/sqlite3.c
-      - .build/bld/sqlite3.h
+      - '{{.BUILD_DIR}}/bld/sqlite3.c'
+      - '{{.BUILD_DIR}}/bld/sqlite3.h'
     cmds:
       - cmd: |
-          cd .build/bld/
+          cd {{.BUILD_DIR}}/bld/
           make sqlite3.c
 
   goreleaser-install:
@@ -178,13 +183,13 @@ tasks:
     sources:
       - .gitmodules
     generates:
-      - .build/logs/git-submodule-init.log
+      - '{{.BUILD_DIR}}/logs/git-submodule-init.log'
     cmds:
       - cmd: |
           git -C "{{.TASKFILE_DIR}}" submodule update --init --recursive
       - cmd: |
-          mkdir -p .build/logs
-          touch .build/logs/git-submodule-init.log
+          mkdir -p {{.BUILD_DIR}}/logs
+          touch {{.BUILD_DIR}}/logs/git-submodule-init.log
 
   vcpkg-integrate:
     deps: [vcpkg-download]
@@ -195,7 +200,7 @@ tasks:
   vcpkg-download:
     deps: [git-submodule-init]
     status:
-      - 'test -f "{{.VCPKG_EXE}}"'
+      - test -f "{{.VCPKG_EXE}}"
     cmds:
       - cmd: '{{.RUN}} "{{ fromSlash .VCPKG_BOOTSTRAP_BAT }}" -disableMetrics'
 
@@ -203,9 +208,11 @@ tasks:
     internal: true
     requires: { vars: [TARGET_DIR] }
     status:
-      - 'test ! -d "{{.TARGET_DIR}}"'
+      - test ! -e "{{.TARGET_DIR}}"
     cmds:
-      - cmd: '{{.RUN}} if exist "{{.TARGET_DIR}}" rmdir /s /q "{{.TARGET_DIR}}"'
+      - cmd: |
+          {{.RUN}} if exist "{{.TARGET_DIR}}" rmdir /s /q "{{.TARGET_DIR}}"
         platforms: [windows]
-      - cmd: '{{.RUN}} rm -rf "{{.TARGET_DIR}}"'
+      - cmd: |
+          rm -rf "{{.TARGET_DIR}}"
         platforms: [linux, darwin]
