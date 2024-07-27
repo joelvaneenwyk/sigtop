@@ -43,7 +43,7 @@ tasks:
         vars: { TARGET_DIR: '{{.BUILD_DIR}}' }
 
   build:
-    deps: [goreleaser-install]
+    deps: [git-submodule-init, goreleaser-install]
     preconditions:
       - '"{{ fromSlash .GORELEASER }}" --version'
     sources:
@@ -60,12 +60,62 @@ tasks:
     cmds:
       - cmd: goreleaser build --single-target --snapshot --clean
 
+  sqlcipher-build:
+    deps: [git-submodule-init]
+    dir: pkg/sqlcipher/src
+    cmds:
+      - cmd: ./configure --enable-tempstore=yes --enable-json1 --enable-fts5 --enable-fts3 --enable-fts4 --enable-rtree --enable-shared --disable-amalgamation
+      - cmd: make
+
+  sqlcipher-patch:
+    cmds:
+      - cmd: |
+          git submodule deinit -f .
+          git submodule update --init
+      - cmd: |
+          cd "{{ joinPath .TASKFILE_DIR "pkg" "sqlcipher" "src" }}"
+          patch -N -i "{{ joinPath .TASKFILE_DIR "pkg" "sqlcipher" "sqlcipher.diff" }}"
+      - cmd: |
+          cd "{{ joinPath .TASKFILE_DIR "pkg" "sqlcipher" "src" }}"
+          ./configure --enable-tempstore=yes CFLAGS=-DSQLITE_HAS_CODEC
+      
+  sqlcipher-make:
+    aliases: [sql]
+    # deps: [sqlcipher-patch]
+    cmds:
+      - cmd: mkdir -p .build
+      - cmd: |
+          cd .build
+          if [ ! test -d "sqlcipher" ]; then
+            git clone -b v4.5.7 https://github.com/sqlcipher/sqlcipher.git
+          fi
+      - cmd: |
+          cd .build
+          mkdir -p bld
+          cd bld
+          ./../sqlcipher/configure  --enable-tempstore=yes CFLAGS=-DSQLITE_HAS_CODEC
+      - cmd: |
+          cd .build/bld/
+          make sqlite3.c
+      
   goreleaser-install:
+    deps: [goreleaser-install-brew]
     desc: Install goreleaser
+    preconditions:
+      - go version
+    status:
+      - goreleaser --version
+    cmds:
+      - cmd: go install github.com/goreleaser/goreleaser@latest
+
+  goreleaser-install-brew:
+    internal: true
+    desc: Install goreleaser using brew
+    platforms: [darwin, linux]
     status:
       - 'goreleaser --version'
     cmds:
-      - cmd: go install github.com/goreleaser/goreleaser@latest
+      - cmd: brew install goreleaser/tap/goreleaser
 
   scoop-install:
     desc: Install libraries with scoop
@@ -81,7 +131,7 @@ tasks:
 
   git-submodule-init:
     status:
-      - 'test -f "{{.VCPKG_BOOTSTRAP_BAT}}"'
+      - test -f pkg/sqlcipher/src/.gitignore
     cmds:
       - cmd: 'git -C "{{.TASKFILE_DIR}}" submodule update --init --recursive'
 
