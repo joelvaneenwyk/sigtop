@@ -43,14 +43,29 @@ tasks:
         vars: { TARGET_DIR: '{{.BUILD_DIR}}' }
 
   build:
+    deps: [goreleaser-install]
     preconditions:
       - '"{{ fromSlash .GORELEASER }}" --version'
     sources:
       - .goreleaser.yaml
+      - pkg/**/*.go
+      - go.mod
+      - go.sum
+      - main.go
     generates:
-      - '{{.BUILD_DIR}}/dist/config.yaml'
+      - 'dist/config.yaml'
+      - 'dist/metadata.json'
+      - 'dist/artifacts.json'
+      - 'dist/**/sigtop'
     cmds:
       - cmd: goreleaser build --single-target --snapshot --clean
+
+  goreleaser-install:
+    desc: Install goreleaser
+    status:
+      - 'goreleaser --version'
+    cmds:
+      - cmd: go install github.com/goreleaser/goreleaser@latest
 
   scoop-install:
     desc: Install libraries with scoop
