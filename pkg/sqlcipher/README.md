@@ -1,16 +1,16 @@
-# About sqlite3.c and sqlite3.h
+# SQL Cipher
 
-The `sqlite3.c` and `sqlite3.h` files were generated from the SQLCipher source
+The `sqlite3.c` and `sqlite3.h` files were generated from the [SQLCipher](https://github.com/sqlcipher/sqlcipher.git) source
 using the following procedure.
 
-Clone the SQLCipher repository and check out the `v4.5.7` tag:
+Clone the [SQLCipher repository](https://github.com/sqlcipher/sqlcipher.git) and check out the `v4.5.7` tag:
 
 ```bash
 git clone -b v4.5.7 https://github.com/sqlcipher/sqlcipher.git
 cd sqlcipher
 ```
 
-Apply `sqlcipher.diff`:
+Apply [`sqlcipher.diff`](./sqlcipher.diff) unified patch:
 
 ```bash
 patch < /path/to/sigtop/sqlcipher/sqlcipher.diff
