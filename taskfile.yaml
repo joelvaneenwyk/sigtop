@@ -124,18 +124,22 @@ tasks:
       - '{{.BUILD_DIR}}/sqlcipher/configure'
     generates:
       - '{{.BUILD_DIR}}/bld/Makefile'
+    status:
+      - test -f "{{.BUILD_DIR}}/bld/Makefile"
     vars:
-      BUILD_DIR: '{{ joinPath .TASKFILE_DIR .BUILD_DIR }}'
       CONFIGURE: '{{ joinPath .TASKFILE_DIR .BUILD_DIR "sqlcipher" "configure" }}'
+      BUILD_OUTPUT_PATH: '{{ joinPath .TASKFILE_DIR .BUILD_DIR "bld" }}'
     cmds:
       - cmd: |
-          mkdir -p  "{{ fromSlash .BUILD_DIR }}"
-          cd  "{{ fromSlash .BUILD_DIR }}"
+          mkdir -p "{{ fromSlash .BUILD_OUTPUT_PATH }}"
+          cd "{{ fromSlash .BUILD_OUTPUT_PATH }}"
           "{{ fromSlash .CONFIGURE }}" \
             --enable-tempstore=yes CFLAGS=-DSQLITE_HAS_CODEC
 
   sqlcipher-compile:
     deps: [sqlcipher-configure]
+    preconditions:
+      - test -d "{{.BUILD_DIR}}/bld"
     sources:
       - '{{.BUILD_DIR}}/bld/Makefile'
       - '{{.BUILD_DIR}}/sqlcipher/**/*.c'
@@ -145,7 +149,7 @@ tasks:
       - '{{.BUILD_DIR}}/bld/sqlite3.h'
     cmds:
       - cmd: |
-          cd {{.BUILD_DIR}}/bld/
+          cd "{{ joinPath .TASKFILE_DIR .BUILD_DIR "bld" }}"
           make sqlite3.c
 
   goreleaser-install:
