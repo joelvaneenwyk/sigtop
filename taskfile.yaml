@@ -4,6 +4,8 @@
 version: "3"
 
 vars:
+  SQLCIPHER_RELEASE_TAG: v4.5.7
+
   VCPKG_BOOTSTRAP_BAT: "{{.TASKFILE_DIR}}/external/vcpkg/bootstrap-vcpkg.bat"
   VCPKG_BOOTSTRAP_SH: "{{.TASKFILE_DIR}}/external/vcpkg/bootstrap-vcpkg.sh"
   VCPKG_EXE: "{{.TASKFILE_DIR}}/external/vcpkg/vcpkg.exe"
@@ -85,11 +87,34 @@ tasks:
       - cmd: mkdir -p "{{ joinPath .TASKFILE_DIR ".build" }}"
       - cmd: |
           if [ ! test -d "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" ]; then
-            git clone -b v4.5.7 https://github.com/sqlcipher/sqlcipher.git "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}"
+            git clone -b "{{.SQLCIPHER_RELEASE_TAG}}" https://github.com/sqlcipher/sqlcipher.git "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}"
           fi
 
-  sqlcipher-configure:
+  sqlcipher-patched:
     deps: [sqlcipher-clone]
+    sources:
+      - pkg/sqlcipher/sqlcipher.diff
+    generates:
+      - .build/sqlcipher/Makefile.in
+      - .build/sqlcipher/src/crypto.h
+      - .build/sqlcipher/src/crypto_go.c
+      - .build/sqlcipher/src/crypto_impl.c
+      - .build/sqlcipher/tool/mksqlite3c.tcl
+    cmds:
+      - cmd: |
+          git -C "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" clean -xfd
+      - cmd: |
+          git -C "{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" reset --hard "{{.SQLCIPHER_RELEASE_TAG}}"
+      - cmd: |
+          patch \
+            --directory="{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" \
+            --verbose \
+            --strip=0 \
+            --batch \
+            -i "{{ joinPath .TASKFILE_DIR "pkg" "sqlcipher" "sqlcipher.diff" }}"
+
+  sqlcipher-configure:
+    deps: [sqlcipher-patched]
     sources:
       - .build/sqlcipher/configure
     generates:
@@ -104,28 +129,8 @@ tasks:
           "{{ fromSlash .CONFIGURE }}" \
             --enable-tempstore=yes CFLAGS=-DSQLITE_HAS_CODEC
 
-  sqlcipher-patched:
-    deps: [sqlcipher-clone]
-    sources:
-      - pkg/sqlcipher/sqlcipher.diff
-    generates:
-      - .build/sqlcipher/Makefile.in
-      - .build/sqlcipher/src/crypto.h
-      - .build/sqlcipher/src/crypto_go.c
-      - .build/sqlcipher/src/crypto_impl.c
-      - .build/sqlcipher/tool/mksqlite3c.tcl
-    cmds:
-      - cmd: |
-          patch \
-            --directory="{{ joinPath .TASKFILE_DIR ".build" "sqlcipher" }}" \
-            --posix \
-            --verbose \
-            --strip=0 \
-            --force \
-            -i "{{ joinPath .TASKFILE_DIR "pkg" "sqlcipher" "sqlcipher.diff" }}"
-
   sqlcipher-compile:
-    deps: [sqlcipher-patched]
+    deps: [sqlcipher-configure]
     sources:
       - .build/bld/Makefile
       - .build/sqlcipher/**/*.c
