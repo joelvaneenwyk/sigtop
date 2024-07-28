@@ -6,8 +6,10 @@ Autovacuum
 autovacuumed
 CFLAGS
 Cfunc
+convs
 cnqoj
 CORRUPTFS
+cpath
 CPPFLAGS
 CRYPTOSRC
 dateof
@@ -28,6 +30,7 @@ fips
 FIPS
 flist
 FULLMUTEX
+getopt
 gitmodules
 GOARCH
 GOBIN
@@ -37,6 +40,8 @@ GORELEASER
 hmac
 HMAC
 HMACSHA
+jatt
+jqte
 KDFSHA
 keywordhash
 LALR
@@ -89,12 +94,16 @@ testfixture
 TRACEFLAGS
 tsrc
 uchar
+urandom
 USELONGDOUBLE
 vauth
 vcpkg
 VCPKG
+webp
+WEBP
 vdbe
 VDBE
 winlibs
 workfactor
+wpath
 ZETETIC
