@@ -11,10 +11,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-14, ubuntu-latest, windows-latest]
+        os:
+          - {image: macos-latest, name: macOS}
+          - {image: windows-latest, name: Windows}
+          - {image: ubuntu-latest, name: Linux}
         go: ['1.18', '1.19', '1.20', '1.21', '1.22']
 
-    runs-on: ${{matrix.os}}
+    runs-on: ${{matrix.os.image}}
+    name: "${{matrix.os.name}} // Go v${{matrix.go}}"
 
     steps:
       - name: checkout
@@ -27,7 +31,7 @@ jobs:
 
         # Work around a problem in GitHub Actions
       - name: set-cc
-        if: startsWith(matrix.os, 'windows') && (matrix.go == '1.18' || matrix.go == '1.19')
+        if: startsWith(matrix.os.image, 'windows') && (matrix.go == '1.18' || matrix.go == '1.19')
         run: |
           'CC=c:\mingw64\bin\gcc' | Out-File -FilePath $env:GITHUB_ENV -Append
 
