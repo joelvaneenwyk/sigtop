@@ -32,6 +32,7 @@ vars:
 
 env:
   VCPKG_DISABLE_METRICS: 1
+  CGO_ENABLED: 1
 
 tasks:
   default:
@@ -63,8 +64,29 @@ tasks:
       - 'dist/metadata.json'
       - 'dist/artifacts.json'
       - 'dist/**/sigtop'
+    vars:
+      NEW_PATH:
+        - '{{ joinPath .USERPROFILE "go" "bin" | fromSlash }}'
+        - '{{ joinPath .USERPROFILE ".local" "msys64" "mingw64" "bin" | fromSlash }}'
     cmds:
-      - cmd: goreleaser build --single-target --snapshot --clean
+      - cmd: | # shell
+          PATH="{{ join ";" .NEW_PATH }};${PATH:-}"
+          goreleaser build --single-target --snapshot --clean
+        set:
+          - nounset
+
+  cross-build:
+    cmds:
+      - cmd: | # shell
+          PRIVATE_KEY=
+          GO_BUILDER_VERSION=v1.17.1
+          docker run --rm --privileged \
+            -e PRIVATE_KEY=$PRIVATE_KEY \
+            -v "{{.TASKFILE_DIR}}":/golang-cross-example \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v $GOPATH/src:/go/src \
+            -w /golang-cross-example \
+            ghcr.io/gythialy/golang-cross:$GO_BUILDER_VERSION --snapshot --rm-dist
 
   sqlcipher:
     deps: [sqlcipher-compile]
