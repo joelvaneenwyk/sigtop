@@ -68,6 +68,7 @@ tasks:
 
   sqlcipher:
     deps: [sqlcipher-compile]
+    platforms: [linux, darwin]
     sources:
       - '{{.BUILD_DIR}}/bld/sqlite3.c'
       - '{{.BUILD_DIR}}/bld/sqlite3.h'
