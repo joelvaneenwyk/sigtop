@@ -25,10 +25,10 @@ import (
 )
 
 var cmdQueryDatabaseEntry = cmdEntry{
-	Name:  "query-database",
-	Alias: "query",
-	Usage: "[-d signal-directory] query",
-	Execute:  cmdQueryDatabase,
+	Name:    "query-database",
+	Alias:   "query",
+	Usage:   "[-d signal-directory] query",
+	Execute: cmdQueryDatabase,
 }
 
 func cmdQueryDatabase(args []string) cmdStatus {

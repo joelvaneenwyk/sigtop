@@ -57,10 +57,10 @@ type attMode struct {
 }
 
 var cmdExportAttachmentsEntry = cmdEntry{
-	Name:  "export-attachments",
-	Alias: "att",
-	Usage: "[-iLlMm] [-c conversation] [-d signal-directory] [-s interval] [directory]",
-	Execute:  cmdExportAttachments,
+	Name:    "export-attachments",
+	Alias:   "att",
+	Usage:   "[-iLlMm] [-c conversation] [-d signal-directory] [-s interval] [directory]",
+	Execute: cmdExportAttachments,
 }
 
 func cmdExportAttachments(args []string) cmdStatus {

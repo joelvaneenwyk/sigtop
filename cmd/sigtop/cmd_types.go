@@ -16,10 +16,10 @@ const (
 )
 
 type cmdEntry struct {
-	Name  string
-	Alias string
-	Usage string
-	Execute  func([]string) cmdStatus
+	Name    string
+	Alias   string
+	Usage   string
+	Execute func([]string) cmdStatus
 }
 
 var cmdEntries = []cmdEntry{

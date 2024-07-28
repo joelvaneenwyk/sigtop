@@ -25,10 +25,10 @@ import (
 )
 
 var cmdExportDatabaseEntry = cmdEntry{
-	Name:  "export-database",
-	Alias: "db",
-	Usage: "[-d signal-directory] file",
-	Execute:  cmdExportDatabase,
+	Name:    "export-database",
+	Alias:   "db",
+	Usage:   "[-d signal-directory] file",
+	Execute: cmdExportDatabase,
 }
 
 func cmdExportDatabase(args []string) cmdStatus {

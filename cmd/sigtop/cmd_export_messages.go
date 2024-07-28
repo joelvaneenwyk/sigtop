@@ -41,10 +41,10 @@ type msgMode struct {
 }
 
 var cmdExportMessagesEntry = cmdEntry{
-	Name:  "export-messages",
-	Alias: "msg",
-	Usage: "[-i] [-c conversation] [-d signal-directory] [-f format] [-s interval] [directory]",
-	Execute:  cmdExportMessages,
+	Name:    "export-messages",
+	Alias:   "msg",
+	Usage:   "[-i] [-c conversation] [-d signal-directory] [-f format] [-s interval] [directory]",
+	Execute: cmdExportMessages,
 }
 
 func cmdExportMessages(args []string) cmdStatus {

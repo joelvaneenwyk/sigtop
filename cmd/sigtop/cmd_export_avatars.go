@@ -28,10 +28,10 @@ import (
 )
 
 var cmdExportAvatarsEntry = cmdEntry{
-	Name:  "export-avatars",
-	Alias: "avt",
-	Usage: "[-Ll] [-c conversation] [-d signal-directory] [directory]",
-	Execute:  cmdExportAvatars,
+	Name:    "export-avatars",
+	Alias:   "avt",
+	Usage:   "[-Ll] [-c conversation] [-d signal-directory] [directory]",
+	Execute: cmdExportAvatars,
 }
 
 func cmdExportAvatars(args []string) cmdStatus {

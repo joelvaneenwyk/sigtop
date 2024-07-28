@@ -24,10 +24,10 @@ import (
 )
 
 var cmdCheckDatabaseEntry = cmdEntry{
-	Name:  "check-database",
-	Alias: "check",
-	Usage: "[-d signal-directory]",
-	Execute:  cmdCheckDatabase,
+	Name:    "check-database",
+	Alias:   "check",
+	Usage:   "[-d signal-directory]",
+	Execute: cmdCheckDatabase,
 }
 
 func cmdCheckDatabase(args []string) cmdStatus {

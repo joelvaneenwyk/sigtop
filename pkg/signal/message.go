@@ -26,36 +26,36 @@ import (
 
 const (
 	// For database versions [8, 19]
-	messageSelect8 = "SELECT "              +
-		"m.conversationId, "            +
-		"m.source, "                    +
-		"m.type, "                      +
-		"m.body, "                      +
-		"m.json, "                      +
-		"m.sent_at "                    +
+	messageSelect8 = "SELECT " +
+		"m.conversationId, " +
+		"m.source, " +
+		"m.type, " +
+		"m.body, " +
+		"m.json, " +
+		"m.sent_at " +
 		"FROM messages AS m "
 
 	// For database versions [20, 87]
-	messageSelect20 = "SELECT "             +
-		"m.conversationId, "            +
-		"c.id, "                        +
-		"m.type, "                      +
-		"m.body, "                      +
-		"m.json, "                      +
-		"m.sent_at "                    +
-		"FROM messages AS m "           +
+	messageSelect20 = "SELECT " +
+		"m.conversationId, " +
+		"c.id, " +
+		"m.type, " +
+		"m.body, " +
+		"m.json, " +
+		"m.sent_at " +
+		"FROM messages AS m " +
 		"LEFT JOIN conversations AS c " +
 		"ON m.sourceUuid = c.uuid "
 
 	// For database versions >= 88
-	messageSelect88 = "SELECT "             +
-		"m.conversationId, "            +
-		"c.id, "                        +
-		"m.type, "                      +
-		"m.body, "                      +
-		"m.json, "                      +
-		"m.sent_at "                    +
-		"FROM messages AS m "           +
+	messageSelect88 = "SELECT " +
+		"m.conversationId, " +
+		"c.id, " +
+		"m.type, " +
+		"m.body, " +
+		"m.json, " +
+		"m.sent_at " +
+		"FROM messages AS m " +
 		"LEFT JOIN conversations AS c " +
 		"ON m.sourceServiceId = c.serviceId "
 
@@ -65,19 +65,19 @@ const (
 	messageWhereConversationIDAndSentBetween = messageWhereConversationID + "AND m.sent_at BETWEEN ? AND ? "
 	messageOrder                             = "ORDER BY m.received_at, m.sent_at"
 
-	messageQuery8  = messageSelect8  + messageWhereConversationID + messageOrder
+	messageQuery8  = messageSelect8 + messageWhereConversationID + messageOrder
 	messageQuery20 = messageSelect20 + messageWhereConversationID + messageOrder
 	messageQuery88 = messageSelect88 + messageWhereConversationID + messageOrder
 
-	messageQuerySentBefore8  = messageSelect8  + messageWhereConversationIDAndSentBefore + messageOrder
+	messageQuerySentBefore8  = messageSelect8 + messageWhereConversationIDAndSentBefore + messageOrder
 	messageQuerySentBefore20 = messageSelect20 + messageWhereConversationIDAndSentBefore + messageOrder
 	messageQuerySentBefore88 = messageSelect88 + messageWhereConversationIDAndSentBefore + messageOrder
 
-	messageQuerySentAfter8  = messageSelect8  + messageWhereConversationIDAndSentAfter + messageOrder
+	messageQuerySentAfter8  = messageSelect8 + messageWhereConversationIDAndSentAfter + messageOrder
 	messageQuerySentAfter20 = messageSelect20 + messageWhereConversationIDAndSentAfter + messageOrder
 	messageQuerySentAfter88 = messageSelect88 + messageWhereConversationIDAndSentAfter + messageOrder
 
-	messageQuerySentBetween8  = messageSelect8  + messageWhereConversationIDAndSentBetween + messageOrder
+	messageQuerySentBetween8  = messageSelect8 + messageWhereConversationIDAndSentBetween + messageOrder
 	messageQuerySentBetween20 = messageSelect20 + messageWhereConversationIDAndSentBetween + messageOrder
 	messageQuerySentBetween88 = messageSelect88 + messageWhereConversationIDAndSentBetween + messageOrder
 )
