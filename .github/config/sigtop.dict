@@ -96,6 +96,7 @@ tclsqlite
 tempstore
 testfixture
 TRACEFLAGS
+trimpath
 tsrc
 uchar
 urandom
