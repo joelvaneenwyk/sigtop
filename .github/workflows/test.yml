@@ -40,6 +40,7 @@ jobs:
 
   test-dragonfly:
     runs-on: ubuntu-latest
+    name: "Dragonfly // Tests"
 
     steps:
       - name: checkout
@@ -57,6 +58,7 @@ jobs:
 
   test-freebsd:
     runs-on: ubuntu-latest
+    name: "FreeBSD // Tests"
 
     steps:
       - name: checkout
@@ -74,6 +76,7 @@ jobs:
 
   test-netbsd:
     runs-on: ubuntu-latest
+    name: "NetBSD // Tests"
 
     steps:
       - name: checkout
@@ -90,6 +93,7 @@ jobs:
 
   test-openbsd:
     runs-on: ubuntu-latest
+    name: "OpenBSD // Tests"
 
     steps:
       - name: checkout
