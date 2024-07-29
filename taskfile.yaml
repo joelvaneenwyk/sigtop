@@ -14,6 +14,13 @@ vars:
   RUN_UNIX: 'sh -c'
   RUN: '{{if eq OS "windows"}}{{.RUN_WINDOWS}}{{ else }}{{.RUN_UNIX}}{{ end }}'
 
+  EXE: >-
+    {{if eq OS "windows"}}
+    dist/sigtop_windows_amd64_v1/sigtop.exe
+    {{else}}
+    dist/sigtop_darwin_amd64_v1/sigtop
+    {{end}}
+
   MSBUILD_EXE_RAW:
     sh: |
       strings=("Preview" "Enterprise" "Professional" "Community")
@@ -32,6 +39,7 @@ vars:
 
 env:
   VCPKG_DISABLE_METRICS: 1
+  CGO_ENABLED: 1
 
 tasks:
   default:
@@ -63,8 +71,54 @@ tasks:
       - 'dist/metadata.json'
       - 'dist/artifacts.json'
       - 'dist/**/sigtop'
+    status:
+      - test -f '{{joinPath .TASKFILE_DIR (trim .EXE)}}'
+    vars:
+      PATH_SEP: '{{if eq OS "windows"}};{{ else }}:{{ end }}'
+      PATH_HOME: '{{ coalesce .USERPROFILE .HOME "" }}'
+      PATH_GO: '{{ joinPath .PATH_HOME "go" "bin" | fromSlash }}'
+      PATH_MINGW: '{{ joinPath .PATH_HOME ".local" "msys64" "mingw64" "bin" | fromSlash }}'
+      PATH_ARRAY: |
+        {{.PATH_GO}}
+        {{.PATH_MINGW}}
+      NEW_PATH: '{{ splitList "\n" .PATH_ARRAY | join .PATH_SEP }}'
     cmds:
-      - cmd: goreleaser build --single-target --snapshot --clean
+      - cmd: | # shell
+          PATH="{{.NEW_PATH}}{{.PATH_SEP}}${PATH:-}"
+          goreleaser build --single-target --snapshot --clean
+        set:
+          - nounset
+
+  run: 
+    deps: [build]
+    cmds:
+      - cmd: |
+          cmd.exe /D /C call "{{ joinPath .TASKFILE_DIR (trim .EXE) | fromSlash }}" {{.CLI_ARGS}}
+        
+  deps:
+    cmds:
+      - cmd: sudo apt-get install gcc-mingw-w64-i686
+      - cmd: sudo apt-get install gcc-mingw-w64-x86-64
+      - cmd: |
+          GOOS=windows GOARCH=386 CGO_ENABLED=1 CC=i686-w64-mingw32-gcc \
+            go build \
+              -buildmode=c-shared -o main.dll main.go
+      - cmd: |
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc \
+            go build -buildmode=c-shared -o main.dll main.go
+
+  cross-build:
+    cmds:
+      - cmd: | # shell
+          PRIVATE_KEY=
+          GO_BUILDER_VERSION=v1.17.1
+          docker run --rm --privileged \
+            -e PRIVATE_KEY=$PRIVATE_KEY \
+            -v "{{.TASKFILE_DIR}}":/golang-cross-example \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v $GOPATH/src:/go/src \
+            -w /golang-cross-example \
+            ghcr.io/gythialy/golang-cross:$GO_BUILDER_VERSION --snapshot --rm-dist
 
   sqlcipher:
     deps: [sqlcipher-compile]

@@ -1,6 +1,12 @@
+#
+# sigtop | Ignore list
+#
+
 /sigtop
 /sigtop.exe
-/tags
+/main.dll
+
+/tags/
 
 dist/
 .task/
