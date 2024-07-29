@@ -8,10 +8,11 @@ on:
   pull_request:
     branches: [main, develop]
 
+permissions:
+  contents: write
+
 jobs:
   release:
-    permissions:
-      contents: write
 
     runs-on: ubuntu-latest
     name: "Release // ${{ github.ref }}"
@@ -19,22 +20,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
-        with:
-          go-version: stable
 
       - name: Build
         run: go build -trimpath
 
-      # More assembly might be required: Docker logins, GPG, etc.
-      # It all depends on your needs.
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: '~> v2'
-          args: release --clean --snapshot
+          args: build --clean --snapshot --verbose --single-target
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
