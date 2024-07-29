@@ -10,7 +10,7 @@ on:
 
 jobs:
   analyze:
-    name: "Analyze // ${{ matrix.name }}"
+    name: "🔬 Analyze // ${{ matrix.name }}"
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
     permissions:

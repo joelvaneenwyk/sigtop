@@ -1,4 +1,4 @@
-name: test
+name: Test
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
         go: ['1.18', '1.19', '1.20', '1.21', '1.22']
 
     runs-on: ${{matrix.os.image}}
-    name: "${{matrix.os.name}} // Go v${{matrix.go}}"
+    name: "🧪 ${{matrix.os.name}} // Go v${{matrix.go}}"
 
     steps:
       - name: checkout
@@ -40,7 +40,7 @@ jobs:
 
   test-dragonfly:
     runs-on: ubuntu-latest
-    name: "Dragonfly // Tests"
+    name: "🧪 Dragonfly // Tests"
 
     steps:
       - name: checkout
@@ -58,7 +58,7 @@ jobs:
 
   test-freebsd:
     runs-on: ubuntu-latest
-    name: "FreeBSD // Tests"
+    name: "🧪 FreeBSD // Tests"
 
     steps:
       - name: checkout
@@ -76,7 +76,7 @@ jobs:
 
   test-netbsd:
     runs-on: ubuntu-latest
-    name: "NetBSD // Tests"
+    name: "🧪 NetBSD // Tests"
 
     steps:
       - name: checkout
@@ -93,7 +93,7 @@ jobs:
 
   test-openbsd:
     runs-on: ubuntu-latest
-    name: "OpenBSD // Tests"
+    name: "🧪 OpenBSD // Tests"
 
     steps:
       - name: checkout

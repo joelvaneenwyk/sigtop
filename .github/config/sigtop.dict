@@ -102,11 +102,13 @@ uchar
 urandom
 USELONGDOUBLE
 USERPROFILE
+usesh
 vauth
 vcpkg
 VCPKG
 vdbe
 VDBE
+vmactions
 webp
 WEBP
 winlibs

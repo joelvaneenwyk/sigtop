@@ -1,4 +1,4 @@
-name: release
+name: Release
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
   release:
 
     runs-on: ubuntu-latest
-    name: "Release // ${{ github.ref }}"
+    name: "🚀 Release // ${{ github.ref_name }}"
 
     steps:
       - name: Checkout
