@@ -14,6 +14,13 @@ vars:
   RUN_UNIX: 'sh -c'
   RUN: '{{if eq OS "windows"}}{{.RUN_WINDOWS}}{{ else }}{{.RUN_UNIX}}{{ end }}'
 
+  EXE: >-
+    {{if eq OS "windows"}}
+    dist/sigtop_windows_amd64_v1/sigtop.exe
+    {{else}}
+    dist/sigtop_darwin_amd64_v1/sigtop
+    {{end}}
+
   MSBUILD_EXE_RAW:
     sh: |
       strings=("Preview" "Enterprise" "Professional" "Community")
@@ -64,6 +71,8 @@ tasks:
       - 'dist/metadata.json'
       - 'dist/artifacts.json'
       - 'dist/**/sigtop'
+    status:
+      - test -f '{{joinPath .TASKFILE_DIR (trim .EXE)}}'
     vars:
       PATH_SEP: '{{if eq OS "windows"}};{{ else }}:{{ end }}'
       PATH_HOME: '{{ coalesce .USERPROFILE .HOME "" }}'
@@ -80,6 +89,12 @@ tasks:
         set:
           - nounset
 
+  run: 
+    deps: [build]
+    cmds:
+      - cmd: |
+          cmd.exe /D /C call "{{ joinPath .TASKFILE_DIR (trim .EXE) | fromSlash }}" {{.CLI_ARGS}}
+        
   deps:
     cmds:
       - cmd: sudo apt-get install gcc-mingw-w64-i686
