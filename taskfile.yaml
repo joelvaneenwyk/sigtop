@@ -65,15 +65,32 @@ tasks:
       - 'dist/artifacts.json'
       - 'dist/**/sigtop'
     vars:
-      NEW_PATH:
-        - '{{ joinPath .USERPROFILE "go" "bin" | fromSlash }}'
-        - '{{ joinPath .USERPROFILE ".local" "msys64" "mingw64" "bin" | fromSlash }}'
+      PATH_SEP: '{{if eq OS "windows"}};{{ else }}:{{ end }}'
+      PATH_HOME: '{{ coalesce .USERPROFILE .HOME "" }}'
+      PATH_GO: '{{ joinPath .PATH_HOME "go" "bin" | fromSlash }}'
+      PATH_MINGW: '{{ joinPath .PATH_HOME ".local" "msys64" "mingw64" "bin" | fromSlash }}'
+      PATH_ARRAY: |
+        {{.PATH_GO}}
+        {{.PATH_MINGW}}
+      NEW_PATH: '{{ splitList "\n" .PATH_ARRAY | join .PATH_SEP }}'
     cmds:
       - cmd: | # shell
-          PATH="{{ join ";" .NEW_PATH }};${PATH:-}"
+          PATH="{{.NEW_PATH}}{{.PATH_SEP}}${PATH:-}"
           goreleaser build --single-target --snapshot --clean
         set:
           - nounset
+
+  deps:
+    cmds:
+      - cmd: sudo apt-get install gcc-mingw-w64-i686
+      - cmd: sudo apt-get install gcc-mingw-w64-x86-64
+      - cmd: |
+          GOOS=windows GOARCH=386 CGO_ENABLED=1 CC=i686-w64-mingw32-gcc \
+            go build \
+              -buildmode=c-shared -o main.dll main.go
+      - cmd: |
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc \
+            go build -buildmode=c-shared -o main.dll main.go
 
   cross-build:
     cmds:
