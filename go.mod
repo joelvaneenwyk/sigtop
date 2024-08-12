@@ -7,7 +7,7 @@ require (
 	github.com/tbvdm/go-openbsd v0.3.0
 	golang.org/x/crypto v0.25.0
 	golang.org/x/sys v0.22.0
-	golang.org/x/text v0.16.0
+	golang.org/x/text v0.17.0
 )
 
 replace github.com/joelvaneenwyk/sigtop => ../../
