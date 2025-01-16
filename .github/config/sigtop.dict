@@ -22,6 +22,7 @@ DSQLCIPHER
 DSQLITE
 elif
 errcode
+errio
 errmsg
 errstr
 Execf
