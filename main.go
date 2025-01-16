@@ -19,7 +19,7 @@ import (
 	"os"
 
 	"github.com/tbvdm/go-cli"
-	cmds "github.com/tbvdm/sigtop/cmd/sigtop"
+	cmds "github.com/joelvaneenwyk/sigtop/cmd/sigtop"
 )
 
 func main() {

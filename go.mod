@@ -1,4 +1,4 @@
-module github.com/tbvdm/sigtop
+module github.com/joelvaneenwyk/sigtop
 
 go 1.18
 
@@ -10,5 +10,3 @@ require (
 	golang.org/x/sys v0.29.0
 	golang.org/x/text v0.21.0
 )
-
-replace github.com/tbvdm/sigtop => ../../

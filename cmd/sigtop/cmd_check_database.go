@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
+	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
-	"github.com/tbvdm/sigtop/pkg/getopt"
-	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 var cmdCheckDatabaseEntry = cmdEntry{
