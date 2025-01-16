@@ -3,10 +3,10 @@
 The `sqlite3.c` and `sqlite3.h` files were generated from the [SQLCipher](https://github.com/sqlcipher/sqlcipher.git) source
 using the following procedure.
 
-Clone the [SQLCipher repository](https://github.com/sqlcipher/sqlcipher.git) and check out the `v4.5.7` tag:
+Clone the [SQLCipher repository](https://github.com/sqlcipher/sqlcipher.git) and check out the `v4.6.1` tag:
 
 ```bash
-git clone -b v4.5.7 https://github.com/sqlcipher/sqlcipher.git
+git clone -b v4.6.1 https://github.com/sqlcipher/sqlcipher.git
 cd sqlcipher
 ```
 
