@@ -1,9 +1,11 @@
 aclocal
 alikes
+atts
 autovac
 autovacuum
 Autovacuum
 autovacuumed
+Bflag
 CFLAGS
 Cfunc
 cnqoj
@@ -14,6 +16,7 @@ CPPFLAGS
 CRYPTOSRC
 dateof
 dbpage
+dbus
 deinit
 devtest
 DIRECTONLY
@@ -27,6 +30,7 @@ errmsg
 errstr
 Execf
 EXRESCODE
+fattr
 fips
 FIPS
 flist
@@ -36,6 +40,7 @@ gitmodules
 GOARCH
 GOBIN
 gobytes
+godbus
 GOPATH
 goreleaser
 GORELEASER
@@ -81,6 +86,7 @@ reencrypt
 releasetest
 rtree
 safestorage
+sanitise
 SCANORDER
 SELFCHECK
 SHAREDCACHE
@@ -105,6 +111,7 @@ urandom
 USELONGDOUBLE
 USERPROFILE
 usesh
+Utime
 vauth
 vcpkg
 VCPKG

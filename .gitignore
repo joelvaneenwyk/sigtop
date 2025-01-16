@@ -8,6 +8,8 @@
 
 /tags/
 
+/.git/
+
 dist/
 .task/
 .idea/
