@@ -62,15 +62,13 @@ tasks:
       - '"{{ fromSlash .GORELEASER }}" --version'
     sources:
       - .goreleaser.yaml
+      - cmd/**/*.go
       - pkg/**/*.go
       - go.mod
       - go.sum
       - main.go
     generates:
-      - 'dist/config.yaml'
-      - 'dist/metadata.json'
-      - 'dist/artifacts.json'
-      - 'dist/**/sigtop'
+      - dist/**
     status:
       - test -f '{{joinPath .TASKFILE_DIR (trim .EXE)}}'
     vars:
@@ -91,9 +89,14 @@ tasks:
 
   run: 
     deps: [build]
+    vars:
+      SIGTOP_BIN_WIN: sigtop_windows_amd64_v1
+      SIGTOP_BIN_LINUX: sigtop_linux_v1
+      SIGTOP_BIN: >-
+        dist/{{if eq OS "windows"}}{{.SIGTOP_BIN_WIN}}{{else}}{{.SIGTOP_BIN_LINUX}}{{end}}/sigtop{{exeExt}}
     cmds:
       - cmd: |
-          cmd.exe /D /C call "{{ joinPath .TASKFILE_DIR (trim .EXE) | fromSlash }}" {{.CLI_ARGS}}
+          "{{joinPath .TASKFILE_DIR .SIGTOP_BIN | toSlash}}" {{.CLI_ARGS}}
         
   deps:
     cmds:
