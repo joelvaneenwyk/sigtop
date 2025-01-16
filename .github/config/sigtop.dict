@@ -79,6 +79,7 @@ READWRITE
 reencrypt
 releasetest
 rtree
+safestorage
 SCANORDER
 SELFCHECK
 SHAREDCACHE
