@@ -53,11 +53,14 @@ func cmdExportMessages(args []string) cmdStatus {
 		incremental: false,
 	}
 
-	getopt.ParseArgs("c:d:f:is:", args)
-	var dArg, sArg getopt.Arg
+	getopt.ParseArgs("Bc:d:f:ik:p:s:", args)
+	var dArg, kArg, sArg getopt.Arg
 	var selectors []string
+	Bflag := false
 	for getopt.Next() {
 		switch getopt.Option() {
+		case 'B':
+			Bflag = true
 		case 'c':
 			selectors = append(selectors, getopt.OptionArg().String())
 		case 'd':
@@ -75,6 +78,11 @@ func cmdExportMessages(args []string) cmdStatus {
 			}
 		case 'i':
 			mode.incremental = true
+		case 'p':
+			log.Print("-p is deprecated; use -k instead")
+			fallthrough
+		case 'k':
+			kArg = getopt.OptionArg()
 		case 's':
 			sArg = getopt.OptionArg()
 		}
@@ -98,12 +106,17 @@ func cmdExportMessages(args []string) cmdStatus {
 		return CommandUsage
 	}
 
+	key, err := encryptionKeyFromFile(kArg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var signalDir string
 	if dArg.Set() {
 		signalDir = dArg.String()
 	} else {
 		var err error
-		signalDir, err = signal.DesktopDir()
+		signalDir, err = signal.DesktopDir(Bflag)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -135,7 +148,12 @@ func cmdExportMessages(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
-	ctx, err := signal.Open(signalDir)
+	var ctx *signal.Context
+	if key == nil {
+		ctx, err = signal.Open(Bflag, signalDir)
+	} else {
+		ctx, err = signal.OpenWithEncryptionKey(Bflag, signalDir, key)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}

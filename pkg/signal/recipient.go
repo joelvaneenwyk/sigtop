@@ -80,22 +80,23 @@ const (
 
 // Based on ContactAvatarType in ts/types/Avatar.ts in the Signal-Desktop
 // repository
-type avatarJSON struct {
-	Path string `json:"path"`
+type Avatar struct {
+	attachmentFile
 }
 
 // Based on ConversationAttributesType in ts/model-types.d.ts in the
 // Signal-Desktop repository
 type recipientJSON struct {
-	ProfileAvatar avatarJSON `json:"profileAvatar"` // For contacts
-	Avatar        avatarJSON `json:"avatar"`        // For groups
+	Username      string `json:"username"`
+	ProfileAvatar Avatar `json:"profileAvatar"` // For contacts
+	Avatar        Avatar `json:"avatar"`        // For groups
 }
 
 type Recipient struct {
-	Type       RecipientType
-	Contact    Contact
-	Group      Group
-	AvatarPath string
+	Type    RecipientType
+	Contact Contact
+	Group   Group
+	Avatar  Avatar
 }
 
 type RecipientType int
@@ -112,6 +113,7 @@ type Contact struct {
 	ProfileFamilyName string
 	ProfileJoinedName string
 	Phone             string
+	Username          string
 }
 
 type Group struct {
@@ -166,14 +168,15 @@ func (c *Context) addRecipient(stmt *sqlcipher.Stmt) error {
 		r = &Recipient{
 			Type: RecipientTypeContact,
 			Contact: Contact{
+				ACI:               stmt.ColumnText(recipientColumnServiceID),
 				Name:              trimBidiChars(stmt.ColumnText(recipientColumnName)),
 				ProfileName:       stmt.ColumnText(recipientColumnProfileName),
 				ProfileFamilyName: stmt.ColumnText(recipientColumnProfileFamilyName),
 				ProfileJoinedName: stmt.ColumnText(recipientColumnProfileFullName),
 				Phone:             stmt.ColumnText(recipientColumnE164),
-				ACI:               stmt.ColumnText(recipientColumnServiceID),
+				Username:          jrpt.Username,
 			},
-			AvatarPath: jrpt.ProfileAvatar.Path,
+			Avatar: jrpt.ProfileAvatar,
 		}
 	case "group":
 		r = &Recipient{
@@ -181,16 +184,16 @@ func (c *Context) addRecipient(stmt *sqlcipher.Stmt) error {
 			Group: Group{
 				Name: stmt.ColumnText(recipientColumnName),
 			},
-			AvatarPath: jrpt.Avatar.Path,
+			Avatar: jrpt.Avatar,
 		}
 	default:
 		return fmt.Errorf("unknown recipient type: %q", t)
 	}
 
-	if r.AvatarPath == SignalAvatarPath {
+	if r.Avatar.Path == SignalAvatarPath {
 		// Ignore the avatar for the Signal release chat. It does not
 		// exist in the Signal Desktop directory.
-		r.AvatarPath = ""
+		r.Avatar.Path = ""
 	}
 
 	id := stmt.ColumnText(recipientColumnID)
@@ -239,10 +242,6 @@ func (c *Context) recipientFromACI(aci string) (*Recipient, error) {
 	return c.recipientsByACI[strings.ToLower(aci)], nil
 }
 
-func (c *Context) AvatarPath(rpt *Recipient) string {
-	return c.absoluteAttachmentPath(rpt.AvatarPath)
-}
-
 func (r *Recipient) displayNameAndDetail() (string, string) {
 	name, detail := "Unknown", ""
 	if r != nil {
@@ -257,10 +256,19 @@ func (r *Recipient) displayNameAndDetail() (string, string) {
 				name = r.Contact.ProfileName
 			case r.Contact.Phone != "":
 				name = r.Contact.Phone
+			case r.Contact.Username != "":
+				name = r.Contact.Username
 			case r.Contact.ACI != "":
 				name = r.Contact.ACI
 			}
-			detail = r.Contact.Phone
+			switch {
+			case r.Contact.Phone != "":
+				detail = r.Contact.Phone
+			case r.Contact.Username != "":
+				detail = r.Contact.Username
+			case r.Contact.ACI != "":
+				detail = r.Contact.ACI
+			}
 		case RecipientTypeGroup:
 			switch {
 			case r.Group.Name != "":
@@ -283,4 +291,8 @@ func (r *Recipient) DetailedDisplayName() string {
 		return name
 	}
 	return name + " (" + detail + ")"
+}
+
+func (c *Context) ReadAvatar(avt *Avatar) ([]byte, error) {
+	return c.readAttachmentFile(&avt.attachmentFile)
 }

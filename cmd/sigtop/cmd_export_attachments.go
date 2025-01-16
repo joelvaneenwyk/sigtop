@@ -18,7 +18,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"log"
 	"os"
@@ -36,12 +35,6 @@ const incrementalFile = ".incremental"
 
 type exportMode int
 
-const (
-	exportCopy exportMode = iota
-	exportLink
-	exportSymlink
-)
-
 type mtimeMode int
 
 const (
@@ -51,7 +44,6 @@ const (
 )
 
 type attMode struct {
-	export      exportMode
 	mtime       mtimeMode
 	incremental bool
 }
@@ -65,30 +57,33 @@ var cmdExportAttachmentsEntry = cmdEntry{
 
 func cmdExportAttachments(args []string) cmdStatus {
 	mode := attMode{
-		export:      exportCopy,
 		mtime:       mtimeNone,
 		incremental: false,
 	}
 
-	getopt.ParseArgs("c:d:iLlMms:", args)
-	var dArg, sArg getopt.Arg
+	getopt.ParseArgs("Bc:d:ik:Mmp:s:", args)
+	var dArg, kArg, sArg getopt.Arg
 	var selectors []string
+	Bflag := false
 	for getopt.Next() {
 		switch getopt.Option() {
+		case 'B':
+			Bflag = true
 		case 'c':
 			selectors = append(selectors, getopt.OptionArg().String())
 		case 'd':
 			dArg = getopt.OptionArg()
 		case 'i':
 			mode.incremental = true
-		case 'L':
-			mode.export = exportLink
-		case 'l':
-			mode.export = exportSymlink
 		case 'M':
 			mode.mtime = mtimeSent
 		case 'm':
 			mode.mtime = mtimeRecv
+		case 'p':
+			log.Print("-p is deprecated; use -k instead")
+			fallthrough
+		case 'k':
+			kArg = getopt.OptionArg()
 		case 's':
 			sArg = getopt.OptionArg()
 		}
@@ -112,12 +107,17 @@ func cmdExportAttachments(args []string) cmdStatus {
 		return CommandUsage
 	}
 
+	key, err := encryptionKeyFromFile(kArg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var signalDir string
 	if dArg.Set() {
 		signalDir = dArg.String()
 	} else {
 		var err error
-		signalDir, err = signal.DesktopDir()
+		signalDir, err = signal.DesktopDir(Bflag)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -149,7 +149,7 @@ func cmdExportAttachments(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
-	if mode.mtime == mtimeNone || mode.export == exportLink {
+	if mode.mtime == mtimeNone {
 		if err := openbsd.Pledge("stdio rpath wpath cpath flock"); err != nil {
 			log.Fatal(err)
 		}
@@ -159,7 +159,16 @@ func cmdExportAttachments(args []string) cmdStatus {
 		}
 	}
 
-	ctx, err := signal.Open(signalDir)
+	if err := addContentTypes(); err != nil {
+		log.Print(err)
+	}
+
+	var ctx *signal.Context
+	if key == nil {
+		ctx, err = signal.Open(Bflag, signalDir)
+	} else {
+		ctx, err = signal.OpenWithEncryptionKey(Bflag, signalDir, key)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -236,8 +245,7 @@ func exportConversationAttachments(ctx *signal.Context, d at.Dir, conv *signal.C
 		if mode.incremental && exported[id] {
 			continue
 		}
-		src := ctx.AttachmentPath(&att)
-		if src == "" {
+		if att.Path == "" {
 			var msg string
 			if att.Pending {
 				msg = "skipping pending attachment"
@@ -248,43 +256,20 @@ func exportConversationAttachments(ctx *signal.Context, d at.Dir, conv *signal.C
 			log.Printf("%s (conversation: %q, sent: %s)", msg, conv.Recipient.DisplayName(), time.UnixMilli(att.TimeSent).Format("2006-01-02 15:04:05"))
 			continue
 		}
-		if _, err := os.Stat(src); err != nil {
-			log.Print(err)
-			ret = false
-			continue
-		}
-		dst, err := attachmentFilename(cd, &att)
+		path, err := attachmentFilename(cd, &att)
 		if err != nil {
 			log.Print(err)
 			ret = false
 			continue
 		}
-		switch mode.export {
-		case exportCopy:
-			if err := copyAttachment(src, cd, dst); err != nil {
-				log.Print(err)
-				ret = false
-				continue
-			}
-			if err := setAttachmentModTime(cd, dst, &att, mode.mtime); err != nil {
-				log.Print(err)
-				ret = false
-			}
-		case exportLink:
-			if err := cd.Link(at.CurrentDir, src, dst, 0); err != nil {
-				log.Print(err)
-				ret = false
-			}
-		case exportSymlink:
-			if err := cd.Symlink(src, dst); err != nil {
-				log.Print(err)
-				ret = false
-				continue
-			}
-			if err := setAttachmentModTime(cd, dst, &att, mode.mtime); err != nil {
-				log.Print(err)
-				ret = false
-			}
+		if err := copyAttachment(ctx, cd, path, &att); err != nil {
+			log.Print(err)
+			ret = false
+			continue
+		}
+		if err := setAttachmentModTime(cd, path, &att, mode.mtime); err != nil {
+			log.Print(err)
+			ret = false
 		}
 		if mode.incremental {
 			exported[id] = true
@@ -307,9 +292,18 @@ func attachmentFilename(d at.Dir, att *signal.Attachment) (string, error) {
 	if att.FileName != "" {
 		name = sanitiseFilename(att.FileName)
 	} else {
-		ext, err := extensionFromContentType(att.ContentType)
-		if err != nil {
-			return "", err
+		var ext string
+		if att.ContentType == "" {
+			log.Printf("attachment without content type (sent: %d)", att.TimeSent)
+		} else {
+			var err error
+			ext, err = extensionFromContentType(att.ContentType)
+			if err != nil {
+				return "", err
+			}
+			if ext == "" {
+				log.Printf("no filename extension for content type %q (sent: %d)", att.ContentType, att.TimeSent)
+			}
 		}
 		name = "attachment-" + time.UnixMilli(att.TimeSent).Format("2006-01-02-15-04-05") + ext
 	}
@@ -345,24 +339,18 @@ func fileExists(d at.Dir, path string) (bool, error) {
 	return true, nil
 }
 
-func copyAttachment(src string, d at.Dir, dst string) error {
-	rf, err := os.Open(src)
+func copyAttachment(ctx *signal.Context, d at.Dir, path string, att *signal.Attachment) error {
+	f, err := d.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
 		return err
 	}
-	defer rf.Close()
-
-	wf, err := d.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
-	if err != nil {
-		return err
+	if err := ctx.WriteAttachment(att, f); err != nil {
+		f.Close()
+		d.Unlink(path, 0)
+		return fmt.Errorf("cannot export %s: %w", path, err)
 	}
 
-	if _, err := io.Copy(wf, rf); err != nil {
-		wf.Close()
-		return fmt.Errorf("copy %s: %w", dst, err)
-	}
-
-	return wf.Close()
+	return f.Close()
 }
 
 func setAttachmentModTime(d at.Dir, path string, att *signal.Attachment, mode mtimeMode) error {

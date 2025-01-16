@@ -16,12 +16,13 @@ online][3].
 
 ## Installing on Unix
 
-First install [Go][4] (version 1.18 or later) and a C compiler. On Ubuntu 22.04
-or later, you can run:
+First install [Go][4] (version 1.18 or later) and a C compiler. On systems
+other than OpenBSD, you also need to install `libsecret` and `pkg-config`.
 
-```bash
-sudo apt install golang gcc
-```
+On Ubuntu 22.04 or later, you can run the following command to install the
+required packages:
+
+	sudo apt install gcc golang libsecret-1-dev pkg-config
 
 Then, to install sigtop, run:
 
@@ -36,6 +37,11 @@ example, to install sigtop in `~/bin`, run:
 ```bash
 GOBIN=~/bin go install github.com/joelvaneenwyk/sigtop@master
 ```
+
+If you prefer, you can install sigtop without `libsecret` support by specifying
+the `no_libsecret` build tag:
+
+	go install -tags no_libsecret github.com/tbvdm/sigtop@master
 
 ## Installing on macOS
 
@@ -109,7 +115,7 @@ GitHub][11] or [send an email][12].
 [6]: https://github.com/joelvaneenwyk/sigtop/releases/latest/download/sigtop.exe
 [7]: https://github.com/joelvaneenwyk/sigtop/releases/latest
 [8]: https://winlibs.com/
-[9]: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.1.0-16.0.5-11.0.0-ucrt-r5/winlibs-x86_64-posix-seh-gcc-13.1.0-mingw-w64ucrt-11.0.0-r5.zip
+[9]: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.2.0posix-18.1.8-12.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-14.2.0-mingw-w64ucrt-12.0.0-r1.zip
 [10]: https://learn.microsoft.com/windows/wsl/
 [11]: https://github.com/joelvaneenwyk/sigtop/issues
 [12]: https://www.kariliq.nl/contact.html

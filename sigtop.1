@@ -12,7 +12,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd January 28, 2024
+.Dd December 19, 2024
 .Dt SIGTOP 1
 .Os
 .Sh NAME
@@ -60,10 +60,26 @@ the
 .Fl d
 option (see below).
 .Pp
+To use
+.Nm
+with Signal Desktop Beta, use the
+.Fl B
+option (see below).
+With this option,
+.Nm
+uses the encryption key and default directory locations for Signal Desktop
+Beta.
+The directory location can still be overridden with
+.Fl d .
+.Pp
 The commands are as follows:
 .Bl -tag -width Ds
 .Tg check
-.It Ic check-database Op Fl d Ar signal-directory
+.It Xo
+.Ic check-database
+.Op Fl B
+.Op Fl d Ar signal-directory
+.Xc
 .D1 Pq Alias: Ic check
 .Pp
 Check the integrity of the encrypted Signal Desktop database.
@@ -76,7 +92,7 @@ pragmas.
 .Tg att
 .It Xo
 .Ic export-attachments
-.Op Fl iLlMm
+.Op Fl BiMm
 .Op Fl c Ar conversation
 .Op Fl d Ar signal-directory
 .Op Fl s Ar interval
@@ -93,17 +109,6 @@ or in the current directory if
 .Ar directory
 is not specified.
 .Pp
-Signal Desktop stores attachments in unencrypted files.
-.Nm
-can copy these files, or create hard links or symbolic links to them.
-By default, attachments are copied.
-If
-.Fl L
-is specified, hard links are created.
-If
-.Fl l
-is specified, symbolic links are created.
-.Pp
 If
 .Fl M
 is specified, the file modification time of each exported attachment is set to
@@ -111,9 +116,6 @@ the time the attachment was sent.
 The
 .Fl m
 option is similar, but uses the time the attachment was received.
-These options are ignored if
-.Fl L
-is also specified.
 .Pp
 If
 .Fl i
@@ -147,7 +149,7 @@ section below for details.
 .Tg avt
 .It Xo
 .Ic export-avatars
-.Op Fl Ll
+.Op Fl B
 .Op Fl c Ar conversation
 .Op Fl d Ar signal-directory
 .Op Ar directory
@@ -161,17 +163,6 @@ or in the current directory if
 .Ar directory
 is not specified.
 .Pp
-Signal Desktop stores avatars in unencrypted files.
-.Nm
-can copy these files, or create hard links or symbolic links to them.
-By default, avatars are copied.
-If
-.Fl L
-is specified, hard links are created.
-If
-.Fl l
-is specified, symbolic links are created.
-.Pp
 If
 .Fl c
 is specified, only the avatar from the specified conversation is exported.
@@ -182,16 +173,40 @@ See the
 .Sx CONVERSATION SELECTORS
 section below for details.
 .Tg db
-.It Ic export-database Oo Fl d Ar signal-directory Oc Ar file
+.It Xo
+.Ic export-database
+.Op Fl B
+.Op Fl d Ar signal-directory
+.Ar file
+.Xc
 .D1 Pq Alias: Ic db
 .Pp
 Decrypt and export the Signal Desktop database to
 .Ar file .
 The exported database is a regular SQLite database.
+.Tg key
+.It Xo
+.Ic export-key
+.Op Fl BD
+.Op Fl d Ar signal-directory
+.Op Ar file
+.Xc
+.D1 Pq Alias: Ic key
+.Pp
+Export the encryption key that is needed to decrypt the database key.
+The key is written to
+.Ar file ,
+or to standard output if
+.Ar file
+is not specified.
+.Pp
+If
+.Fl D
+is specified, the database key is exported instead of the encryption key.
 .Tg msg
 .It Xo
 .Ic export-messages
-.Op Fl i
+.Op Fl Bi
 .Op Fl c Ar conversation
 .Op Fl d Ar signal-directory
 .Op Fl f Ar format
@@ -252,17 +267,29 @@ See the
 .Sx TIME INTERVALS
 section below for details.
 .Tg query
-.It Ic query-database Oo Fl d Ar signal-directory Oc Ar sql
+.It Xo
+.Ic query-database
+.Op Fl B
+.Op Fl d Ar signal-directory
+.Op Fl o Ar outfile
+.Ar sql
+.Xc
 .D1 Pq Alias: Ic query
 .Pp
 Query the Signal Desktop database.
-The results of the query, if any, are written to standard output.
+The results of the query, if any, are written to
+.Ar outfile ,
+or to standard output if
+.Ar outfile
+is not specified.
 Because the Signal Desktop database is opened in read-only mode, statements
 attempting to modify the database will fail.
 .El
 .Sh CONVERSATION SELECTORS
-Conversation selectors select conversations by name or phone number.
+Conversation selectors select conversations by name, phone number or service
+ID.
 Names can be matched either literally or against a regular expression.
+A service ID is a UUID that uniquely identifies a Signal user.
 .Pp
 A conversation selector of the form
 .Sq Cm = Ns Ar name
@@ -274,9 +301,10 @@ may be omitted if
 .Ar name
 does not begin with
 .Sq = ,
-.Sq /
+.Sq / ,
+.Sq +
 or
-.Sq + .
+.Sq \&: .
 For example, the conversation selectors
 .Ql =alice
 and
@@ -295,6 +323,11 @@ selects a conversation by phone number.
 For example, the conversation selector
 .Ql +123456789
 matches the conversation with that phone number.
+.Pp
+A conversation selector of the form
+.Sq Cm \&: Ns Ar uuid
+selects the conversation with the Signal user whose service ID is
+.Ar uuid .
 .Sh TIME INTERVALS
 A time is specified as
 .So
@@ -402,6 +435,11 @@ at
 .Pa /mnt :
 .Bd -literal -offset indent
 $ sigtop db -d /mnt/Users/Alice/AppData/Roaming/Signal signal.db
+.Ed
+.Pp
+Export the database from Signal Desktop Beta:
+.Bd -literal -offset indent
+$ sigtop db -B signal-beta.db
 .Ed
 .Sh SEE ALSO
 .Lk https://github.com/joelvaneenwyk/sigtop

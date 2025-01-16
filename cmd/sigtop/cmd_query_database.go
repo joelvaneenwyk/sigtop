@@ -17,6 +17,7 @@ package cmds
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
@@ -32,13 +33,22 @@ var cmdQueryDatabaseEntry = cmdEntry{
 }
 
 func cmdQueryDatabase(args []string) cmdStatus {
-	getopt.ParseArgs("d:", args)
-
-	var dArg getopt.Arg
+	getopt.ParseArgs("Bd:k:p:o:", args)
+	var dArg, kArg, oArg getopt.Arg
+	Bflag := false
 	for getopt.Next() {
 		switch opt := getopt.Option(); opt {
+		case 'B':
+			Bflag = true
 		case 'd':
 			dArg = getopt.OptionArg()
+		case 'p':
+			log.Print("-p is deprecated; use -k instead")
+			fallthrough
+		case 'k':
+			kArg = getopt.OptionArg()
+		case 'o':
+			oArg = getopt.OptionArg()
 		}
 	}
 
@@ -53,12 +63,24 @@ func cmdQueryDatabase(args []string) cmdStatus {
 
 	query := args[0]
 
+	key, err := encryptionKeyFromFile(kArg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	outfile := os.Stdout
+	if oArg.Set() {
+		if outfile, err = os.OpenFile(oArg.String(), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	var signalDir string
 	if dArg.Set() {
 		signalDir = dArg.String()
 	} else {
 		var err error
-		signalDir, err = signal.DesktopDir()
+		signalDir, err = signal.DesktopDir(Bflag)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -77,7 +99,12 @@ func cmdQueryDatabase(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
-	ctx, err := signal.Open(signalDir)
+	var ctx *signal.Context
+	if key == nil {
+		ctx, err = signal.Open(Bflag, signalDir)
+	} else {
+		ctx, err = signal.OpenWithEncryptionKey(Bflag, signalDir, key)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,7 +117,13 @@ func cmdQueryDatabase(args []string) cmdStatus {
 	}
 
 	for _, cols := range rows {
-		fmt.Println(strings.Join(cols, "|"))
+		fmt.Fprintln(outfile, strings.Join(cols, "|"))
+	}
+
+	if outfile != os.Stdout {
+		if err := outfile.Close(); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	return CommandOk

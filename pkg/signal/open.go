@@ -15,16 +15,20 @@
 package signal
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/joelvaneenwyk/sigtop/pkg/safestorage"
 	"github.com/joelvaneenwyk/sigtop/pkg/sqlcipher"
 )
 
 type Context struct {
 	dir                        string
+	encKey                     *safestorage.RawEncryptionKey
+	dbKey                      []byte
 	db                         *sqlcipher.DB
 	dbVersion                  int
 	recipientsByConversationID map[string]*Recipient
@@ -32,7 +36,15 @@ type Context struct {
 	recipientsByACI            map[string]*Recipient
 }
 
-func Open(dir string) (*Context, error) {
+func Open(betaApp bool, dir string) (*Context, error) {
+	return OpenWithEncryptionKey(betaApp, dir, nil)
+}
+
+func OpenWithEncryptionKey(betaApp bool, dir string, encKey *safestorage.RawEncryptionKey) (*Context, error) {
+	appName := AppName
+	if betaApp {
+		appName = AppNameBeta
+	}
 	dbFile := filepath.Join(dir, DatabaseFile)
 
 	// SQLite/SQLCipher doesn't provide a useful error message if the
@@ -48,13 +60,20 @@ func Open(dir string) (*Context, error) {
 		return nil, err
 	}
 
-	key, err := dbKey(dir)
+	dbKey, encKey, err := databaseAndEncryptionKeys(appName, dir, encKey)
 	if err != nil {
+		return nil, err
+	}
+
+	// Format the key as an SQLite blob literal
+	dbKeyBlob := []byte(fmt.Sprintf("x'%s'", string(dbKey)))
+
+	if err := db.Key(dbKeyBlob); err != nil {
 		db.Close()
 		return nil, err
 	}
 
-	if err := db.Key(key); err != nil {
+	if err := db.Exec("PRAGMA cipher_log = stderr"); err != nil {
 		db.Close()
 		return nil, err
 	}
@@ -78,6 +97,8 @@ func Open(dir string) (*Context, error) {
 
 	ctx := Context{
 		dir:       dir,
+		encKey:    encKey,
+		dbKey:     dbKey,
 		db:        db,
 		dbVersion: dbVersion,
 	}
@@ -89,23 +110,69 @@ func (c *Context) Close() {
 	c.db.Close()
 }
 
-func dbKey(dir string) ([]byte, error) {
+func databaseAndEncryptionKeys(appName, dir string, encKey *safestorage.RawEncryptionKey) ([]byte, *safestorage.RawEncryptionKey, error) {
 	configFile := filepath.Join(dir, ConfigFile)
 	data, err := os.ReadFile(configFile)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var config struct {
-		Key string `json:"key"`
+		LegacyKey          *string `json:"key"`
+		ModernKey          *string `json:"encryptedKey"`
+		SafeStorageBackend *string `json:"safeStorageBackend"`
 	}
-
 	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("cannot parse %s: %w", configFile, err)
+		return nil, nil, fmt.Errorf("cannot parse %s: %w", configFile, err)
 	}
 
-	// Write the key as an SQLite blob literal
-	key := "x'" + config.Key + "'"
+	if config.LegacyKey != nil && encKey == nil {
+		return []byte(*config.LegacyKey), nil, nil
+	}
 
-	return []byte(key), nil
+	if config.ModernKey == nil {
+		return nil, nil, fmt.Errorf("encrypted database key not found")
+	}
+
+	dbKey, err := hex.DecodeString(*config.ModernKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid encrypted database key: %w", err)
+	}
+
+	app := safestorage.NewApp(appName, dir)
+	if encKey != nil {
+		if err := app.SetEncryptionKey(*encKey); err != nil {
+			return nil, nil, fmt.Errorf("cannot set encryption key: %w", err)
+		}
+	} else if config.SafeStorageBackend != nil {
+		if err := app.SetBackend(*config.SafeStorageBackend); err != nil {
+			return nil, nil, fmt.Errorf("cannot set safeStorage backend: %w", err)
+		}
+	}
+
+	dbKey, err = app.Decrypt(dbKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot decrypt database key: %w", err)
+	}
+
+	encKey, err = app.EncryptionKey()
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot get encryption key: %w", err)
+	}
+
+	return dbKey, encKey, nil
+}
+
+func (c *Context) EncryptionKey() ([]byte, error) {
+	if c.encKey == nil || c.encKey.Key == nil {
+		return nil, fmt.Errorf("encryption key not available")
+	}
+	return c.encKey.Key, nil
+}
+
+func (c *Context) DatabaseKey() ([]byte, error) {
+	if c.dbKey == nil {
+		return nil, fmt.Errorf("database key not available")
+	}
+	return c.dbKey, nil
 }

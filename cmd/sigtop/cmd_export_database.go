@@ -32,13 +32,20 @@ var cmdExportDatabaseEntry = cmdEntry{
 }
 
 func cmdExportDatabase(args []string) cmdStatus {
-	getopt.ParseArgs("d:", args)
-
-	var dArg getopt.Arg
+	getopt.ParseArgs("Bd:k:p:", args)
+	var dArg, kArg getopt.Arg
+	Bflag := false
 	for getopt.Next() {
 		switch getopt.Option() {
+		case 'B':
+			Bflag = true
 		case 'd':
 			dArg = getopt.OptionArg()
+		case 'p':
+			log.Print("-p is deprecated; use -k instead")
+			fallthrough
+		case 'k':
+			kArg = getopt.OptionArg()
 		}
 	}
 
@@ -53,12 +60,17 @@ func cmdExportDatabase(args []string) cmdStatus {
 
 	dbFile := args[0]
 
+	key, err := encryptionKeyFromFile(kArg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var signalDir string
 	if dArg.Set() {
 		signalDir = dArg.String()
 	} else {
 		var err error
-		signalDir, err = signal.DesktopDir()
+		signalDir, err = signal.DesktopDir(Bflag)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -90,7 +102,12 @@ func cmdExportDatabase(args []string) cmdStatus {
 	}
 	f.Close()
 
-	ctx, err := signal.Open(signalDir)
+	var ctx *signal.Context
+	if key == nil {
+		ctx, err = signal.Open(Bflag, signalDir)
+	} else {
+		ctx, err = signal.OpenWithEncryptionKey(Bflag, signalDir, key)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}

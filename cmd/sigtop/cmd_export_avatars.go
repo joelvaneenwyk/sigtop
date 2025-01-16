@@ -35,21 +35,23 @@ var cmdExportAvatarsEntry = cmdEntry{
 }
 
 func cmdExportAvatars(args []string) cmdStatus {
-	mode := exportCopy
-
-	getopt.ParseArgs("c:d:Ll", args)
-	var dArg getopt.Arg
+	getopt.ParseArgs("Bc:d:k:p:", args)
+	var dArg, kArg getopt.Arg
 	var selectors []string
+	Bflag := false
 	for getopt.Next() {
 		switch getopt.Option() {
+		case 'B':
+			Bflag = true
 		case 'c':
 			selectors = append(selectors, getopt.OptionArg().String())
 		case 'd':
 			dArg = getopt.OptionArg()
-		case 'L':
-			mode = exportLink
-		case 'l':
-			mode = exportSymlink
+		case 'p':
+			log.Print("-p is deprecated; use -k instead")
+			fallthrough
+		case 'k':
+			kArg = getopt.OptionArg()
 		}
 	}
 
@@ -71,12 +73,17 @@ func cmdExportAvatars(args []string) cmdStatus {
 		return CommandUsage
 	}
 
+	key, err := encryptionKeyFromFile(kArg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var signalDir string
 	if dArg.Set() {
 		signalDir = dArg.String()
 	} else {
 		var err error
-		signalDir, err = signal.DesktopDir()
+		signalDir, err = signal.DesktopDir(Bflag)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -99,7 +106,12 @@ func cmdExportAvatars(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
-	ctx, err := signal.Open(signalDir)
+	var ctx *signal.Context
+	if key == nil {
+		ctx, err = signal.Open(Bflag, signalDir)
+	} else {
+		ctx, err = signal.OpenWithEncryptionKey(Bflag, signalDir, key)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -112,7 +124,7 @@ func cmdExportAvatars(args []string) cmdStatus {
 	return CommandOk
 }
 
-func exportAvatars(ctx *signal.Context, dir string, mode exportMode, selectors []string) bool {
+func exportAvatars(ctx *signal.Context, dir string, selectors []string) bool {
 	d, err := at.Open(dir)
 	if err != nil {
 		log.Print(err)
@@ -128,7 +140,7 @@ func exportAvatars(ctx *signal.Context, dir string, mode exportMode, selectors [
 
 	ret := true
 	for _, conv := range convs {
-		if err := exportAvatar(ctx, d, conv.Recipient, mode); err != nil {
+		if err := exportAvatar(ctx, d, conv.Recipient); err != nil {
 			log.Print(err)
 			ret = false
 		}
@@ -137,43 +149,26 @@ func exportAvatars(ctx *signal.Context, dir string, mode exportMode, selectors [
 	return ret
 }
 
-func exportAvatar(ctx *signal.Context, d at.Dir, rpt *signal.Recipient, mode exportMode) error {
-	src := ctx.AvatarPath(rpt)
-	if src == "" {
+func exportAvatar(ctx *signal.Context, d at.Dir, rpt *signal.Recipient) error {
+	if rpt.Avatar.Path == "" {
 		return nil
 	}
 
-	data, err := os.ReadFile(src)
+	data, err := ctx.ReadAvatar(&rpt.Avatar)
 	if err != nil {
 		return err
 	}
 
-	dst := avatarFilename(rpt, data)
-
-	switch mode {
-	case exportCopy:
-		f, err := d.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
-		if err != nil {
-			return err
-		}
-		if _, err = f.Write(data); err != nil {
-			f.Close()
-			return err
-		}
-		if err = f.Close(); err != nil {
-			return err
-		}
-	case exportLink:
-		if err = d.Link(at.CurrentDir, src, dst, 0); err != nil {
-			return err
-		}
-	case exportSymlink:
-		if err = d.Symlink(src, dst); err != nil {
-			return err
-		}
+	f, err := d.OpenFile(avatarFilename(rpt, data), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+	if err != nil {
+		return err
+	}
+	if _, err = f.Write(data); err != nil {
+		f.Close()
+		return err
 	}
 
-	return nil
+	return f.Close()
 }
 
 func avatarFilename(rpt *signal.Recipient, data []byte) string {
