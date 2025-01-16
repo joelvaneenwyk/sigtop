@@ -11,29 +11,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - {image: macos-latest, name: macOS}
-          - {image: windows-latest, name: Windows}
-          - {image: ubuntu-latest, name: Linux}
-        go: ['1.18', '1.19', '1.20', '1.21', '1.22']
+        os: [ubuntu, windows, macos]
+        go: ["1.18", "1.19", "1.20", "1.21", "1.22"]
 
-    runs-on: ${{matrix.os.image}}
-    name: "🧪 ${{matrix.os.name}} // Go v${{matrix.go}}"
+    runs-on: ${{matrix.os}}-latest
+    name: 🧪 ${{ matrix.os == 'ubuntu' && 'Linux' || matrix.os == 'windows' && 'Windows' || 'MacOS' }} // Go v${{ matrix.go }}"
 
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: apt
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends \
+            libsecret-1-dev pkg-config
 
       - name: setup-go
         uses: actions/setup-go@v5
         with:
           go-version: ${{matrix.go}}
-
-      - name: apt
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt update
-          sudo apt install libsecret-1-dev pkg-config
 
         # Work around a problem in GitHub Actions
       - name: set-cc
