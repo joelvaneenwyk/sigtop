@@ -1,0 +1,4 @@
+[submodule "pkg/sqlcipher/src"]
+	path = pkg/sqlcipher/src
+	url = https://github.com/sqlcipher/sqlcipher.git
+	branch = master
