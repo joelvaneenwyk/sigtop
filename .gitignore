@@ -14,3 +14,6 @@ dist/
 .task/
 .idea/
 .build/
+.output/
+
+*.txt
