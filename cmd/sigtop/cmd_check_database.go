@@ -18,16 +18,16 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
-	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
+	"github.com/tbvdm/sigtop/pkg/getopt"
+	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 var cmdCheckDatabaseEntry = cmdEntry{
-	Name:    "check-database",
-	Alias:   "check",
-	Usage:   "[-d signal-directory]",
-	Execute: cmdCheckDatabase,
+	name:    "check-database",
+	alias:   "check",
+	usage:   "[-d signal-directory]",
+	exec:    cmdCheckDatabase,
 }
 
 func cmdCheckDatabase(args []string) cmdStatus {
@@ -53,7 +53,7 @@ func cmdCheckDatabase(args []string) cmdStatus {
 	}
 
 	if len(getopt.Args()) != 0 {
-		return CommandUsage
+		return cmdUsage
 	}
 
 	key, err := encryptionKeyFromFile(kArg)
@@ -99,15 +99,15 @@ func cmdCheckDatabase(args []string) cmdStatus {
 	results, err := ctx.CheckDatabase()
 	if err != nil {
 		log.Print(err)
-		return CommandError
+		return cmdError
 	}
 
 	if len(results) > 0 {
 		for _, s := range results {
 			fmt.Println(s)
 		}
-		return CommandError
+		return cmdError
 	}
 
-	return CommandOk
+	return cmdOK
 }

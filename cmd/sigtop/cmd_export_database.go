@@ -19,16 +19,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
-	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
+	"github.com/tbvdm/sigtop/pkg/getopt"
+	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 var cmdExportDatabaseEntry = cmdEntry{
-	Name:    "export-database",
-	Alias:   "db",
-	Usage:   "[-d signal-directory] file",
-	Execute: cmdExportDatabase,
+	name:    "export-database",
+	alias:   "db",
+	usage:   "[-d signal-directory] file",
+	exec: cmdExportDatabase,
 }
 
 func cmdExportDatabase(args []string) cmdStatus {
@@ -55,7 +55,7 @@ func cmdExportDatabase(args []string) cmdStatus {
 
 	args = getopt.Args()
 	if len(args) != 1 {
-		return CommandUsage
+		return cmdUsage
 	}
 
 	dbFile := args[0]
@@ -115,8 +115,8 @@ func cmdExportDatabase(args []string) cmdStatus {
 
 	if err = ctx.WriteDatabase(dbFile); err != nil {
 		log.Print(err)
-		return CommandError
+		return cmdError
 	}
 
-	return CommandOk
+	return cmdOK
 }

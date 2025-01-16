@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/sqlcipher"
+	"github.com/tbvdm/sigtop/pkg/sqlcipher"
 )
 
 const (

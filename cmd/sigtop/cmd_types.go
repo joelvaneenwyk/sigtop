@@ -1,25 +1,30 @@
 package cmds
 
 import (
+	"bufio"
+	"os"
 	"path/filepath"
+	"strings"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
+	"github.com/tbvdm/sigtop/pkg/getopt"
+	"github.com/tbvdm/sigtop/pkg/safestorage"
+	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 type cmdStatus int
 
 const (
-	CommandOk cmdStatus = iota
-	CommandError
-	CommandUsage
+	cmdOK cmdStatus = iota
+	cmdError
+	cmdUsage
 )
 
 type cmdEntry struct {
-	Name    string
-	Alias   string
-	Usage   string
-	Execute func([]string) cmdStatus
+	name  string
+	alias string
+	usage string
+	exec  func([]string) cmdStatus
 }
 
 var cmdEntries = []cmdEntry{
@@ -31,13 +36,46 @@ var cmdEntries = []cmdEntry{
 	cmdQueryDatabaseEntry,
 }
 
-func Command(name string) *cmdEntry {
+func command(name string) *cmdEntry {
 	for _, cmd := range cmdEntries {
-		if name == cmd.Name || name == cmd.Alias {
+		if name == cmd.name || name == cmd.alias {
 			return &cmd
 		}
 	}
 	return nil
+}
+
+func encryptionKeyFromFile(keyfile getopt.Arg) (*safestorage.RawEncryptionKey, error) {
+	if !keyfile.Set() {
+		return nil, nil
+	}
+
+	system, file, found := strings.Cut(keyfile.String(), ":")
+	if !found {
+		system, file = file, system
+	}
+
+	f := os.Stdin
+	if file != "-" {
+		var err error
+		if f, err = os.Open(file); err != nil {
+			return nil, err
+		}
+		defer f.Close()
+	}
+
+	s := bufio.NewScanner(f)
+	s.Scan()
+	if s.Err() != nil {
+		return nil, s.Err()
+	}
+
+	key := safestorage.RawEncryptionKey{
+		Key: append([]byte{}, s.Bytes()...),
+		OS:  system,
+	}
+
+	return &key, nil
 }
 
 func unveilSignalDir(dir string) error {

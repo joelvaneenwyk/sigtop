@@ -12,7 +12,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package main
+package cmds
 
 import (
 	"fmt"
@@ -20,8 +20,8 @@ import (
 	"os"
 
 	"github.com/tbvdm/go-openbsd"
-	"github.com/tbvdm/sigtop/getopt"
-	"github.com/tbvdm/sigtop/signal"
+	"github.com/tbvdm/sigtop/pkg/getopt"
+	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 var cmdExportKeyEntry = cmdEntry{

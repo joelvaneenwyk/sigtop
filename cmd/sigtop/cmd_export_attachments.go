@@ -25,10 +25,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/at"
-	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
-	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
+	"github.com/tbvdm/sigtop/pkg/at"
+	"github.com/tbvdm/sigtop/pkg/getopt"
+	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 const incrementalFile = ".incremental"
@@ -49,10 +49,10 @@ type attMode struct {
 }
 
 var cmdExportAttachmentsEntry = cmdEntry{
-	Name:    "export-attachments",
-	Alias:   "att",
-	Usage:   "[-iLlMm] [-c conversation] [-d signal-directory] [-s interval] [directory]",
-	Execute: cmdExportAttachments,
+	name:    "export-attachments",
+	alias:   "att",
+	usage:   "[-iLlMm] [-c conversation] [-d signal-directory] [-s interval] [directory]",
+	exec: cmdExportAttachments,
 }
 
 func cmdExportAttachments(args []string) cmdStatus {
@@ -104,7 +104,7 @@ func cmdExportAttachments(args []string) cmdStatus {
 			log.Fatal(err)
 		}
 	default:
-		return CommandUsage
+		return cmdUsage
 	}
 
 	key, err := encryptionKeyFromFile(kArg)
@@ -175,10 +175,10 @@ func cmdExportAttachments(args []string) cmdStatus {
 	defer ctx.Close()
 
 	if !exportAttachments(ctx, exportDir, mode, selectors, ival) {
-		return CommandError
+		return cmdError
 	}
 
-	return CommandOk
+	return cmdOK
 }
 
 func exportAttachments(ctx *signal.Context, dir string, mode attMode, selectors []string, ival signal.Interval) bool {

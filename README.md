@@ -27,7 +27,7 @@ required packages:
 Then, to install sigtop, run:
 
 ```bash
-go install github.com/joelvaneenwyk/sigtop@master
+go install github.com/tbvdm/sigtop@master
 ```
 
 This command installs a `sigtop` binary in `~/go/bin`. You can choose another
@@ -35,7 +35,7 @@ installation directory by setting the `GOBIN` environment variable. For
 example, to install sigtop in `~/bin`, run:
 
 ```bash
-GOBIN=~/bin go install github.com/joelvaneenwyk/sigtop@master
+GOBIN=~/bin go install github.com/tbvdm/sigtop@master
 ```
 
 If you prefer, you can install sigtop without `libsecret` support by specifying
@@ -78,7 +78,7 @@ Then, to install sigtop, open a PowerShell window and run:
 
 ```bash
 $env:cc = 'c:\winlibs\mingw64\bin\gcc'
-go install github.com/joelvaneenwyk/sigtop@master
+go install github.com/tbvdm/sigtop@master
 ```
 
 This command installs `sigtop.exe` in `C:\Users\<username>\go\bin`. This
@@ -92,7 +92,7 @@ example, if you are running Ubuntu (22.04 or later) in WSL:
 
 ```bash
 sudo apt install golang gcc-mingw-w64-x86-64
-GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go install github.com/joelvaneenwyk/sigtop@master
+GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go install github.com/tbvdm/sigtop@master
 ```
 
 This command installs `sigtop.exe` in `~/go/bin/windows_amd64`. You can move
@@ -107,15 +107,15 @@ mv ~/go/bin/windows_amd64/sigtop.exe /mnt/c/Users/Alice
 Please report bugs and other problems with sigtop. You can [open an issue on
 GitHub][11] or [send an email][12].
 
-[1]: https://github.com/joelvaneenwyk/sigtop
+[1]: https://github.com/tbvdm/sigtop
 [2]: https://github.com/signalapp/Signal-Desktop
 [3]: https://www.kariliq.nl/man/sigtop.1.html
 [4]: https://go.dev/
 [5]: https://brew.sh/
-[6]: https://github.com/joelvaneenwyk/sigtop/releases/latest/download/sigtop.exe
-[7]: https://github.com/joelvaneenwyk/sigtop/releases/latest
+[6]: https://github.com/tbvdm/sigtop/releases/latest/download/sigtop.exe
+[7]: https://github.com/tbvdm/sigtop/releases/latest
 [8]: https://winlibs.com/
 [9]: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.2.0posix-18.1.8-12.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-14.2.0-mingw-w64ucrt-12.0.0-r1.zip
 [10]: https://learn.microsoft.com/windows/wsl/
-[11]: https://github.com/joelvaneenwyk/sigtop/issues
+[11]: https://github.com/tbvdm/sigtop/issues
 [12]: https://www.kariliq.nl/contact.html

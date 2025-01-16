@@ -21,8 +21,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/safestorage"
-	"github.com/joelvaneenwyk/sigtop/pkg/sqlcipher"
+	"github.com/tbvdm/sigtop/pkg/safestorage"
+	"github.com/tbvdm/sigtop/pkg/sqlcipher"
 )
 
 type Context struct {

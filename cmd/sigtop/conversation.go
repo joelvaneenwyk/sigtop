@@ -19,7 +19,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/signal"
+	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 func selectConversations(ctx *signal.Context, selectors []string) ([]signal.Conversation, error) {

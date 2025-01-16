@@ -20,11 +20,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/at"
-	"github.com/joelvaneenwyk/sigtop/pkg/errio"
-	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
-	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
+	"github.com/tbvdm/sigtop/pkg/at"
+	"github.com/tbvdm/sigtop/pkg/errio"
+	"github.com/tbvdm/sigtop/pkg/getopt"
+	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 type formatMode int
@@ -41,10 +41,10 @@ type msgMode struct {
 }
 
 var cmdExportMessagesEntry = cmdEntry{
-	Name:    "export-messages",
-	Alias:   "msg",
-	Usage:   "[-i] [-c conversation] [-d signal-directory] [-f format] [-s interval] [directory]",
-	Execute: cmdExportMessages,
+	name:    "export-messages",
+	alias:   "msg",
+	usage:   "[-i] [-c conversation] [-d signal-directory] [-f format] [-s interval] [directory]",
+	exec: cmdExportMessages,
 }
 
 func cmdExportMessages(args []string) cmdStatus {
@@ -103,7 +103,7 @@ func cmdExportMessages(args []string) cmdStatus {
 			log.Fatal(err)
 		}
 	default:
-		return CommandUsage
+		return cmdUsage
 	}
 
 	key, err := encryptionKeyFromFile(kArg)
@@ -160,10 +160,10 @@ func cmdExportMessages(args []string) cmdStatus {
 	defer ctx.Close()
 
 	if !exportMessages(ctx, exportDir, mode, selectors, ival) {
-		return CommandError
+		return cmdError
 	}
 
-	return CommandOk
+	return cmdOK
 }
 
 func exportMessages(ctx *signal.Context, dir string, mode msgMode, selectors []string, ival signal.Interval) bool {

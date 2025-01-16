@@ -20,16 +20,16 @@ import (
 	"os"
 	"strings"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
-	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
+	"github.com/tbvdm/sigtop/pkg/getopt"
+	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 var cmdQueryDatabaseEntry = cmdEntry{
-	Name:    "query-database",
-	Alias:   "query",
-	Usage:   "[-d signal-directory] query",
-	Execute: cmdQueryDatabase,
+	name:    "query-database",
+	alias:   "query",
+	usage:   "[-d signal-directory] query",
+	exec: cmdQueryDatabase,
 }
 
 func cmdQueryDatabase(args []string) cmdStatus {
@@ -58,7 +58,7 @@ func cmdQueryDatabase(args []string) cmdStatus {
 
 	args = getopt.Args()
 	if len(args) != 1 {
-		return CommandUsage
+		return cmdUsage
 	}
 
 	query := args[0]
@@ -113,7 +113,7 @@ func cmdQueryDatabase(args []string) cmdStatus {
 	rows, err := ctx.QueryDatabase(query)
 	if err != nil {
 		log.Print(err)
-		return CommandError
+		return cmdError
 	}
 
 	for _, cols := range rows {
@@ -126,5 +126,5 @@ func cmdQueryDatabase(args []string) cmdStatus {
 		}
 	}
 
-	return CommandOk
+	return cmdOK
 }

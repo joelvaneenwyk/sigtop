@@ -21,17 +21,17 @@ import (
 	"log"
 	"os"
 
-	"github.com/joelvaneenwyk/sigtop/pkg/at"
-	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
-	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
+	"github.com/tbvdm/sigtop/pkg/at"
+	"github.com/tbvdm/sigtop/pkg/getopt"
+	"github.com/tbvdm/sigtop/pkg/signal"
 )
 
 var cmdExportAvatarsEntry = cmdEntry{
-	Name:    "export-avatars",
-	Alias:   "avt",
-	Usage:   "[-Ll] [-c conversation] [-d signal-directory] [directory]",
-	Execute: cmdExportAvatars,
+	name:  "export-avatars",
+	alias: "avt",
+	usage: "[-B] [-c conversation] [-d signal-directory] [-k [system:]keyfile] [directory]",
+	exec:  cmdExportAvatars,
 }
 
 func cmdExportAvatars(args []string) cmdStatus {
@@ -70,7 +70,7 @@ func cmdExportAvatars(args []string) cmdStatus {
 			log.Fatal(err)
 		}
 	default:
-		return CommandUsage
+		return cmdUsage
 	}
 
 	key, err := encryptionKeyFromFile(kArg)
@@ -117,11 +117,11 @@ func cmdExportAvatars(args []string) cmdStatus {
 	}
 	defer ctx.Close()
 
-	if !exportAvatars(ctx, exportDir, mode, selectors) {
-		return CommandError
+	if !exportAvatars(ctx, exportDir, selectors) {
+		return cmdError
 	}
 
-	return CommandOk
+	return cmdOK
 }
 
 func exportAvatars(ctx *signal.Context, dir string, selectors []string) bool {
