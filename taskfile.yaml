@@ -69,8 +69,6 @@ tasks:
       - main.go
     generates:
       - dist/**
-    status:
-      - test -f '{{joinPath .TASKFILE_DIR (trim .EXE)}}'
     vars:
       PATH_SEP: '{{if eq OS "windows"}};{{ else }}:{{ end }}'
       PATH_HOME: '{{ coalesce .USERPROFILE .HOME "" }}'
