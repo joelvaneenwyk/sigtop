@@ -24,10 +24,10 @@ import (
 )
 
 var cmdCheckDatabaseEntry = cmdEntry{
-	name:    "check-database",
-	alias:   "check",
-	usage:   "[-d signal-directory]",
-	exec:    cmdCheckDatabase,
+	Name:    "check-database",
+	Alias:   "check",
+	Usage:   "[-d signal-directory]",
+	Execute:    cmdCheckDatabase,
 }
 
 func cmdCheckDatabase(args []string) cmdStatus {
@@ -53,7 +53,7 @@ func cmdCheckDatabase(args []string) cmdStatus {
 	}
 
 	if len(getopt.Args()) != 0 {
-		return cmdUsage
+		return CommandUsage
 	}
 
 	key, err := encryptionKeyFromFile(kArg)
@@ -99,15 +99,15 @@ func cmdCheckDatabase(args []string) cmdStatus {
 	results, err := ctx.CheckDatabase()
 	if err != nil {
 		log.Print(err)
-		return cmdError
+		return CommandError
 	}
 
 	if len(results) > 0 {
 		for _, s := range results {
 			fmt.Println(s)
 		}
-		return cmdError
+		return CommandError
 	}
 
-	return cmdOK
+	return CommandOK
 }

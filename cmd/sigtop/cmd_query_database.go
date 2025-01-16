@@ -26,10 +26,10 @@ import (
 )
 
 var cmdQueryDatabaseEntry = cmdEntry{
-	name:    "query-database",
-	alias:   "query",
-	usage:   "[-d signal-directory] query",
-	exec: cmdQueryDatabase,
+	Name:    "query-database",
+	Alias:   "query",
+	Usage:   "[-d signal-directory] query",
+	Execute: cmdQueryDatabase,
 }
 
 func cmdQueryDatabase(args []string) cmdStatus {
@@ -58,7 +58,7 @@ func cmdQueryDatabase(args []string) cmdStatus {
 
 	args = getopt.Args()
 	if len(args) != 1 {
-		return cmdUsage
+		return CommandUsage
 	}
 
 	query := args[0]
@@ -113,7 +113,7 @@ func cmdQueryDatabase(args []string) cmdStatus {
 	rows, err := ctx.QueryDatabase(query)
 	if err != nil {
 		log.Print(err)
-		return cmdError
+		return CommandError
 	}
 
 	for _, cols := range rows {
@@ -126,5 +126,5 @@ func cmdQueryDatabase(args []string) cmdStatus {
 		}
 	}
 
-	return cmdOK
+	return CommandOK
 }

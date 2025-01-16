@@ -49,10 +49,10 @@ type attMode struct {
 }
 
 var cmdExportAttachmentsEntry = cmdEntry{
-	name:    "export-attachments",
-	alias:   "att",
-	usage:   "[-iLlMm] [-c conversation] [-d signal-directory] [-s interval] [directory]",
-	exec: cmdExportAttachments,
+	Name:    "export-attachments",
+	Alias:   "att",
+	Usage:   "[-iLlMm] [-c conversation] [-d signal-directory] [-s interval] [directory]",
+	Execute: cmdExportAttachments,
 }
 
 func cmdExportAttachments(args []string) cmdStatus {
@@ -104,7 +104,7 @@ func cmdExportAttachments(args []string) cmdStatus {
 			log.Fatal(err)
 		}
 	default:
-		return cmdUsage
+		return CommandUsage
 	}
 
 	key, err := encryptionKeyFromFile(kArg)
@@ -175,10 +175,10 @@ func cmdExportAttachments(args []string) cmdStatus {
 	defer ctx.Close()
 
 	if !exportAttachments(ctx, exportDir, mode, selectors, ival) {
-		return cmdError
+		return CommandError
 	}
 
-	return cmdOK
+	return CommandOK
 }
 
 func exportAttachments(ctx *signal.Context, dir string, mode attMode, selectors []string, ival signal.Interval) bool {

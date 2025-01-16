@@ -18,8 +18,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/tbvdm/go-cli"
 	cmds "github.com/joelvaneenwyk/sigtop/cmd/sigtop"
+	"github.com/tbvdm/go-cli"
 )
 
 func main() {
@@ -29,15 +29,15 @@ func main() {
 		cli.ExitUsage("command", "[argument ...]")
 	}
 
-	cmd := cmds.command(os.Args[1])
+	cmd := cmds.Command(os.Args[1])
 	if cmd == nil {
 		log.Fatalln("invalid command:", os.Args[1])
 	}
 
 	switch cmd.Execute(os.Args[2:]) {
-	case cmds.cmdError:
+	case cmds.CommandError:
 		os.Exit(1)
-	case cmds.cmdUsage:
+	case cmds.CommandUsage:
 		cli.ExitUsage(cmd.Name, cmd.Usage)
 	}
 }

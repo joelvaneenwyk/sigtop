@@ -15,16 +15,16 @@ import (
 type cmdStatus int
 
 const (
-	cmdOK cmdStatus = iota
-	cmdError
-	cmdUsage
+	CommandOK cmdStatus = iota
+	CommandError
+	CommandUsage
 )
 
 type cmdEntry struct {
-	name  string
-	alias string
-	usage string
-	exec  func([]string) cmdStatus
+	Name  string
+	Alias string
+	Usage string
+	Execute  func([]string) cmdStatus
 }
 
 var cmdEntries = []cmdEntry{
@@ -36,9 +36,9 @@ var cmdEntries = []cmdEntry{
 	cmdQueryDatabaseEntry,
 }
 
-func command(name string) *cmdEntry {
+func Command(name string) *cmdEntry {
 	for _, cmd := range cmdEntries {
-		if name == cmd.name || name == cmd.alias {
+		if name == cmd.Name || name == cmd.Alias {
 			return &cmd
 		}
 	}

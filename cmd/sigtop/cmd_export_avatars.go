@@ -28,10 +28,10 @@ import (
 )
 
 var cmdExportAvatarsEntry = cmdEntry{
-	name:  "export-avatars",
-	alias: "avt",
-	usage: "[-B] [-c conversation] [-d signal-directory] [-k [system:]keyfile] [directory]",
-	exec:  cmdExportAvatars,
+	Name:  "export-avatars",
+	Alias: "avt",
+	Usage: "[-B] [-c conversation] [-d signal-directory] [-k [system:]keyfile] [directory]",
+	Execute:  cmdExportAvatars,
 }
 
 func cmdExportAvatars(args []string) cmdStatus {
@@ -70,7 +70,7 @@ func cmdExportAvatars(args []string) cmdStatus {
 			log.Fatal(err)
 		}
 	default:
-		return cmdUsage
+		return CommandUsage
 	}
 
 	key, err := encryptionKeyFromFile(kArg)
@@ -118,10 +118,10 @@ func cmdExportAvatars(args []string) cmdStatus {
 	defer ctx.Close()
 
 	if !exportAvatars(ctx, exportDir, selectors) {
-		return cmdError
+		return CommandError
 	}
 
-	return cmdOK
+	return CommandOK
 }
 
 func exportAvatars(ctx *signal.Context, dir string, selectors []string) bool {

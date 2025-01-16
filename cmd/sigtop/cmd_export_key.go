@@ -25,10 +25,10 @@ import (
 )
 
 var cmdExportKeyEntry = cmdEntry{
-	name:  "export-key",
-	alias: "key",
-	usage: "[-BD] [-d signal-directory] [-k [system:]keyfile] [file]",
-	exec:  cmdExportKey,
+	Name:  "export-key",
+	Alias: "key",
+	Usage: "[-BD] [-d signal-directory] [-k [system:]keyfile] [file]",
+	Execute:  cmdExportKey,
 }
 
 func cmdExportKey(args []string) cmdStatus {
@@ -64,7 +64,7 @@ func cmdExportKey(args []string) cmdStatus {
 			log.Fatal(err)
 		}
 	default:
-		return cmdUsage
+		return CommandUsage
 	}
 
 	key, err := encryptionKeyFromFile(kArg)
@@ -111,12 +111,12 @@ func cmdExportKey(args []string) cmdStatus {
 	if exportDBKey {
 		if data, err = ctx.DatabaseKey(); err != nil {
 			log.Printf("cannot get database key: %v", err)
-			return cmdError
+			return CommandError
 		}
 	} else {
 		if data, err = ctx.EncryptionKey(); err != nil {
 			log.Printf("cannot get encryption key: %v", err)
-			return cmdError
+			return CommandError
 		}
 	}
 	fmt.Fprintln(outfile, string(data))
@@ -124,9 +124,9 @@ func cmdExportKey(args []string) cmdStatus {
 	if outfile != os.Stdout {
 		if err := outfile.Close(); err != nil {
 			log.Print(err)
-			return cmdError
+			return CommandError
 		}
 	}
 
-	return cmdOK
+	return CommandOK
 }

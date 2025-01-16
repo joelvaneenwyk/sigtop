@@ -25,10 +25,10 @@ import (
 )
 
 var cmdExportDatabaseEntry = cmdEntry{
-	name:    "export-database",
-	alias:   "db",
-	usage:   "[-d signal-directory] file",
-	exec: cmdExportDatabase,
+	Name:    "export-database",
+	Alias:   "db",
+	Usage:   "[-d signal-directory] file",
+	Execute: cmdExportDatabase,
 }
 
 func cmdExportDatabase(args []string) cmdStatus {
@@ -55,7 +55,7 @@ func cmdExportDatabase(args []string) cmdStatus {
 
 	args = getopt.Args()
 	if len(args) != 1 {
-		return cmdUsage
+		return CommandUsage
 	}
 
 	dbFile := args[0]
@@ -115,8 +115,8 @@ func cmdExportDatabase(args []string) cmdStatus {
 
 	if err = ctx.WriteDatabase(dbFile); err != nil {
 		log.Print(err)
-		return cmdError
+		return CommandError
 	}
 
-	return cmdOK
+	return CommandOK
 }
