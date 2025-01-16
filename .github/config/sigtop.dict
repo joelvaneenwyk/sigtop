@@ -1,6 +1,7 @@
 aclocal
 alikes
 atts
+autobuild
 autovac
 autovacuum
 Autovacuum
@@ -57,6 +58,7 @@ lcrypto
 LDFLAGS
 lempar
 libcrypto
+libsecret
 libtomcrypt
 LIBTOMCRYPT
 LOGEST
