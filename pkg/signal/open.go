@@ -36,11 +36,7 @@ type Context struct {
 	recipientsByACI            map[string]*Recipient
 }
 
-func Open(betaApp bool, dir string) (*Context, error) {
-	return OpenWithEncryptionKey(betaApp, dir, nil)
-}
-
-func OpenWithEncryptionKey(betaApp bool, dir string, encKey *safestorage.RawEncryptionKey) (*Context, error) {
+func Open(betaApp bool, dir string, encKey *safestorage.RawEncryptionKey) (*Context, error) {
 	appName := AppName
 	if betaApp {
 		appName = AppNameBeta
@@ -78,10 +74,9 @@ func OpenWithEncryptionKey(betaApp bool, dir string, encKey *safestorage.RawEncr
 		return nil, err
 	}
 
-	// Verify key
 	if err := db.Exec("SELECT count(*) FROM sqlite_master"); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("cannot verify key: %w", err)
+		return nil, fmt.Errorf("cannot verify database key: %w", err)
 	}
 
 	dbVersion, err := databaseVersion(db)
