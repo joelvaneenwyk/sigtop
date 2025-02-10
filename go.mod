@@ -8,5 +8,5 @@ require (
 	github.com/tbvdm/go-openbsd v0.5.0
 	golang.org/x/crypto v0.32.0
 	golang.org/x/sys v0.29.0
-	golang.org/x/text v0.21.0
+	golang.org/x/text v0.22.0
 )
