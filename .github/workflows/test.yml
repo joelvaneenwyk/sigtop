@@ -92,8 +92,17 @@ jobs:
       - name: netbsd-vm
         uses: vmactions/netbsd-vm@v1
         with:
-          prepare: pkg_add go libsecret pkg-config pkg_alternatives
-          run: |
+          envs: 'CARGO_TERM_COLOR'
+          usesh: false
+          mem: 8192
+          prepare: | # shell
+            PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
+            export PKG_PATH="https://cdn.netbsd.org/pub/pkgsrc/package/$(uname -s)/$(uname -p)/$(uname -r)/All"
+            pkg_add -v pkgin
+            pkgin update
+            pkgin -y upgrade
+            pkg_add go118 libsecret pkg-config pkg_alternatives
+          run: | # shell
             uname -a
             go version
             go build
