@@ -97,11 +97,14 @@ jobs:
           mem: 8192
           prepare: | # shell
             PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
+            export PKG_PGEN="https://cdn.netbsd.org/pub/pkgsrc/package/$(uname -s)/$(uname -p)/$(uname -r)/All"
             export PKG_PATH="https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.0_2024Q4/All/"
+            echo "PKG_PGEN=$PKG_PATH"
+            echo "PKG_PATH=$PKG_PATH"
             pkg_add -v pkgin
             pkgin update
             pkgin -y upgrade
-            pkg_add go libsecret pkg-config pkg_alternatives
+            pkg_add go118 libsecret pkg-config pkg_alternatives
           run: | # shell
             uname -a
             go version
