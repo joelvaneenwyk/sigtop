@@ -97,7 +97,7 @@ jobs:
           mem: 8192
           prepare: | # shell
             PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
-            export PKG_PATH="http://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/.$(uname -r | cut -d '.' -f 1).0_current/All/"
+            export PKG_PATH="https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.0_2024Q4/All/"
             pkg_add -v pkgin
             pkgin update
             pkgin -y upgrade
