@@ -44,7 +44,7 @@ env:
 tasks:
   default:
     cmds:
-      - task: build
+      - task: run
 
   rebuild:
     cmds:
@@ -85,7 +85,7 @@ tasks:
         set:
           - nounset
 
-  run: 
+  run:
     deps: [build]
     vars:
       SIGTOP_BIN_WIN: sigtop_windows_amd64_v1
@@ -94,8 +94,8 @@ tasks:
         dist/{{if eq OS "windows"}}{{.SIGTOP_BIN_WIN}}{{else}}{{.SIGTOP_BIN_LINUX}}{{end}}/sigtop{{exeExt}}
     cmds:
       - cmd: |
-          "{{joinPath .TASKFILE_DIR .SIGTOP_BIN | toSlash}}" {{.CLI_ARGS}}
-        
+          "{{joinPath .TASKFILE_DIR .SIGTOP_BIN | toSlash}}" {{.CLI_ARGS | default "export-messages .output" }}
+
   deps:
     cmds:
       - cmd: sudo apt-get install gcc-mingw-w64-i686
