@@ -32,6 +32,7 @@ var cmdEntries = []cmdEntry{
 	cmdExportAvatarsEntry,
 	cmdExportAttachmentsEntry,
 	cmdExportDatabaseEntry,
+	cmdHelpEntry,
 	cmdExportMessagesEntry,
 	cmdQueryDatabaseEntry,
 }
