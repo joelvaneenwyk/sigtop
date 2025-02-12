@@ -24,7 +24,7 @@ builds:
       - windows
 
 archives:
-  - format: tar.gz
+  - formats: ['zip', 'tar.gz']
     # This template makes the OS and Arch compatible with the
     # results of `uname` output.
     name_template: >-
@@ -34,10 +34,6 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # Use zip format for Windows archives
-    format_overrides:
-      - goos: windows
-        format: zip
 
 changelog:
   sort: asc
