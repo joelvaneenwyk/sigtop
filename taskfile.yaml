@@ -94,7 +94,12 @@ tasks:
         dist/{{if eq OS "windows"}}{{.SIGTOP_BIN_WIN}}{{else}}{{.SIGTOP_BIN_LINUX}}{{end}}/sigtop{{exeExt}}
     cmds:
       - cmd: |
-          "{{joinPath .TASKFILE_DIR .SIGTOP_BIN | toSlash}}" {{.CLI_ARGS | default "export-messages .output" }}
+          if [ -z "{{.CLI_ARGS}}" ]; then
+            "{{joinPath .TASKFILE_DIR .SIGTOP_BIN | toSlash}}" export-messages .output
+            "{{joinPath .TASKFILE_DIR .SIGTOP_BIN | toSlash}}" export-attachments .output
+          else
+            "{{joinPath .TASKFILE_DIR .SIGTOP_BIN | toSlash}}" {{.CLI_ARGS}}
+          fi
 
   deps:
     cmds:
