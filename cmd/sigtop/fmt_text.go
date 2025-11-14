@@ -51,7 +51,7 @@ func textWriteMessage(ew *errio.Writer, msg *signal.Message) {
 	}
 	textWriteAttachmentFields(ew, "", msg.Attachments)
 	for _, rct := range msg.Reactions {
-		textWriteFieldf(ew, "", "Reaction", "%s from %s", rct.Emoji, rct.Recipient.DisplayName())
+		textWriteFieldf(ew, "", "Reaction", "%s from %s", rct.Emoji, rct.Recipient.DetailedDisplayName())
 	}
 	if len(msg.Edits) == 0 {
 		textWriteQuote(ew, "", msg.Quote)
@@ -79,7 +79,11 @@ func textWriteRecipientField(ew *errio.Writer, prefix, field string, rpt *signal
 }
 
 func textWriteTimeField(ew *errio.Writer, prefix, field string, msec int64) {
-	textWriteField(ew, prefix, field, time.UnixMilli(msec).Format("Mon, 2 Jan 2006 15:04:05 -0700"))
+	s := "unknown"
+	if msec >= 0 {
+		s = time.UnixMilli(msec).Format("Mon, 2 Jan 2006 15:04:05 -0700")
+	}
+	textWriteField(ew, prefix, field, s)
 }
 
 func textWriteAttachmentFields(ew *errio.Writer, prefix string, atts []signal.Attachment) {
@@ -115,7 +119,7 @@ func textWriteQuote(ew *errio.Writer, prefix string, qte *signal.Quote) {
 	}
 	prefix += ">"
 	textWriteRecipientField(ew, prefix, "From", qte.Recipient)
-	textWriteTimeField(ew, prefix, "Sent", qte.ID)
+	textWriteTimeField(ew, prefix, "Sent", qte.TimeSent)
 	textWriteQuoteAttachmentFields(ew, prefix, qte.Attachments)
 	textWriteBody(ew, prefix, &qte.Body)
 }

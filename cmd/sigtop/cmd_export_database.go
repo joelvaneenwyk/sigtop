@@ -60,20 +60,14 @@ func cmdExportDatabase(args []string) cmdStatus {
 
 	dbFile := args[0]
 
-	key, err := encryptionKeyFromFile(kArg)
+	key, err := encryptionKeyFromArgument(kArg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var signalDir string
-	if dArg.Set() {
-		signalDir = dArg.String()
-	} else {
-		var err error
-		signalDir, err = signal.DesktopDir(Bflag)
-		if err != nil {
-			log.Fatal(err)
-		}
+	signalDir, err := signalDirFromArgument(dArg, Bflag)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if err := unveilSignalDir(signalDir); err != nil {

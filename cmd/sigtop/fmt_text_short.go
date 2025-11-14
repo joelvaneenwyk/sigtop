@@ -41,7 +41,7 @@ func textShortWriteMessage(ew *errio.Writer, msg *signal.Message) {
 	} else {
 		var details []string
 		if msg.Quote != nil {
-			details = append(details, fmt.Sprintf("reply to %s on %s", msg.Quote.Recipient.DisplayName(), textShortFormatTime(msg.Quote.ID)))
+			details = append(details, fmt.Sprintf("reply to %s on %s", msg.Quote.Recipient.DisplayName(), textShortFormatTime(msg.Quote.TimeSent)))
 		}
 		if len(msg.Edits) > 0 {
 			details = append(details, "edited")
@@ -64,5 +64,8 @@ func textShortWriteMessage(ew *errio.Writer, msg *signal.Message) {
 }
 
 func textShortFormatTime(msec int64) string {
+	if msec < 0 {
+		return "unknown"
+	}
 	return time.UnixMilli(msec).Format("2006-01-02 15:04")
 }

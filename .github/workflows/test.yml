@@ -11,36 +11,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu, windows, macos]
-        go: ["1.20", "1.21", "1.22"]
+        os:
+          [
+            macos-13,
+            macos-14,
+            macos-15,
+            ubuntu-22.04,
+            ubuntu-24.04,
+            windows-latest,
+          ]
+        go: ["1.21", "1.22", "1.23", "1.24", "1.25"]
 
     runs-on: ${{matrix.os}}-latest
     name: 🧪 ${{ matrix.os == 'ubuntu' && 'Linux' || matrix.os == 'windows' && 'Windows' || 'MacOS' }} // Go v${{ matrix.go }}"
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: apt
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt update
-          sudo apt install -y --no-install-recommends \
-            libsecret-1-dev pkg-config
+      - name: checkout
+        uses: actions/checkout@v5
 
       - name: setup-go
         uses: actions/setup-go@v5
         with:
           go-version: ${{matrix.go}}
 
-        # Work around a problem in GitHub Actions
-      - name: set-cc
-        if: startsWith(matrix.os.image, 'windows') && (matrix.go == '1.18' || matrix.go == '1.19')
+      - name: apt
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
-          'CC=c:\mingw64\bin\gcc' | Out-File -FilePath $env:GITHUB_ENV -Append
+          sudo apt update
+          sudo apt install libsecret-1-dev pkg-config
 
       - name: build
         run: go build
@@ -51,7 +49,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: dragonfly-vm
         uses: vmactions/dragonflybsd-vm@v1
@@ -61,6 +59,7 @@ jobs:
           run: |
             uname -a
             go version
+            git config --add --global safe.directory "$PWD"
             go build
 
   test-freebsd:
@@ -69,7 +68,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: freebsd-vm
         uses: vmactions/freebsd-vm@v1
@@ -87,12 +86,12 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: netbsd-vm
         uses: vmactions/netbsd-vm@v1
         with:
-          envs: 'CARGO_TERM_COLOR'
+          envs: "CARGO_TERM_COLOR"
           usesh: false
           mem: 8192
           prepare: | # shell
@@ -113,7 +112,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: openbsd-vm
         uses: vmactions/openbsd-vm@v1
@@ -127,3 +126,23 @@ jobs:
             uname -a
             go version
             go build
+
+  test-wsl:
+    runs-on: windows-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v5
+
+      - name: setup-wsl
+        uses: Vampire/setup-wsl@v6
+        with:
+          distribution: Ubuntu-24.04
+          additional-packages: gcc-mingw-w64-x86-64 golang
+
+      - name: build
+        shell: wsl-bash {0}
+        run: |
+          uname -a
+          go version
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go build

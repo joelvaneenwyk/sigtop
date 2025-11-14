@@ -63,7 +63,7 @@ func cmdQueryDatabase(args []string) cmdStatus {
 
 	query := args[0]
 
-	key, err := encryptionKeyFromFile(kArg)
+	key, err := encryptionKeyFromArgument(kArg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,15 +75,9 @@ func cmdQueryDatabase(args []string) cmdStatus {
 		}
 	}
 
-	var signalDir string
-	if dArg.Set() {
-		signalDir = dArg.String()
-	} else {
-		var err error
-		signalDir, err = signal.DesktopDir(Bflag)
-		if err != nil {
-			log.Fatal(err)
-		}
+	signalDir, err := signalDirFromArgument(dArg, Bflag)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if err := unveilSignalDir(signalDir); err != nil {

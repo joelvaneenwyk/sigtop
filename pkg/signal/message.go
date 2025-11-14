@@ -27,34 +27,68 @@ import (
 const (
 	// For database versions [8, 19]
 	messageSelect8 = "SELECT " +
+		"m.id, " +
 		"m.conversationId, " +
 		"m.source, " +
 		"m.type, " +
 		"m.body, " +
 		"m.json, " +
-		"m.sent_at " +
+		"m.sent_at, " +
+		"m.json ->> '$.received_at' " +
 		"FROM messages AS m "
 
-	// For database versions [20, 87]
+	// For database versions [20, 22]
 	messageSelect20 = "SELECT " +
+		"m.id, " +
 		"m.conversationId, " +
 		"c.id, " +
 		"m.type, " +
 		"m.body, " +
 		"m.json, " +
-		"m.sent_at " +
+		"m.sent_at, " +
+		"m.json ->> '$.received_at' " +
 		"FROM messages AS m " +
 		"LEFT JOIN conversations AS c " +
 		"ON m.sourceUuid = c.uuid "
 
-	// For database versions >= 88
-	messageSelect88 = "SELECT " +
+	// For database versions [23, 87]
+	messageSelect23 = "SELECT " +
+		"m.id, " +
 		"m.conversationId, " +
 		"c.id, " +
 		"m.type, " +
 		"m.body, " +
 		"m.json, " +
-		"m.sent_at " +
+		"m.sent_at, " +
+		"coalesce(m.json ->> '$.received_at_ms', m.json ->> '$.received_at') " +
+		"FROM messages AS m " +
+		"LEFT JOIN conversations AS c " +
+		"ON m.sourceUuid = c.uuid "
+
+	// For database versions [88, 1270)
+	messageSelect88 = "SELECT " +
+		"m.id, " +
+		"m.conversationId, " +
+		"c.id, " +
+		"m.type, " +
+		"m.body, " +
+		"m.json, " +
+		"m.sent_at, " +
+		"coalesce(m.json ->> '$.received_at_ms', m.json ->> '$.received_at') " +
+		"FROM messages AS m " +
+		"LEFT JOIN conversations AS c " +
+		"ON m.sourceServiceId = c.serviceId "
+
+	// For database versions >= 1270
+	messageSelect1270 = "SELECT " +
+		"m.id, " +
+		"m.conversationId, " +
+		"c.id, " +
+		"m.type, " +
+		"m.body, " +
+		"m.json, " +
+		"m.sent_at, " +
+		"coalesce(m.received_at_ms, m.json ->> '$.received_at_ms', m.json ->> '$.received_at') " +
 		"FROM messages AS m " +
 		"LEFT JOIN conversations AS c " +
 		"ON m.sourceServiceId = c.serviceId "
@@ -65,43 +99,52 @@ const (
 	messageWhereConversationIDAndSentBetween = messageWhereConversationID + "AND m.sent_at BETWEEN ? AND ? "
 	messageOrder                             = "ORDER BY m.received_at, m.sent_at"
 
-	messageQuery8  = messageSelect8 + messageWhereConversationID + messageOrder
-	messageQuery20 = messageSelect20 + messageWhereConversationID + messageOrder
-	messageQuery88 = messageSelect88 + messageWhereConversationID + messageOrder
+	messageQuery8    = messageSelect8 + messageWhereConversationID + messageOrder
+	messageQuery20   = messageSelect20 + messageWhereConversationID + messageOrder
+	messageQuery23   = messageSelect23 + messageWhereConversationID + messageOrder
+	messageQuery88   = messageSelect88 + messageWhereConversationID + messageOrder
+	messageQuery1270 = messageSelect1270 + messageWhereConversationID + messageOrder
 
-	messageQuerySentBefore8  = messageSelect8 + messageWhereConversationIDAndSentBefore + messageOrder
-	messageQuerySentBefore20 = messageSelect20 + messageWhereConversationIDAndSentBefore + messageOrder
-	messageQuerySentBefore88 = messageSelect88 + messageWhereConversationIDAndSentBefore + messageOrder
+	messageQuerySentBefore8    = messageSelect8 + messageWhereConversationIDAndSentBefore + messageOrder
+	messageQuerySentBefore20   = messageSelect20 + messageWhereConversationIDAndSentBefore + messageOrder
+	messageQuerySentBefore23   = messageSelect23 + messageWhereConversationIDAndSentBefore + messageOrder
+	messageQuerySentBefore88   = messageSelect88 + messageWhereConversationIDAndSentBefore + messageOrder
+	messageQuerySentBefore1270 = messageSelect1270 + messageWhereConversationIDAndSentBefore + messageOrder
 
-	messageQuerySentAfter8  = messageSelect8 + messageWhereConversationIDAndSentAfter + messageOrder
-	messageQuerySentAfter20 = messageSelect20 + messageWhereConversationIDAndSentAfter + messageOrder
-	messageQuerySentAfter88 = messageSelect88 + messageWhereConversationIDAndSentAfter + messageOrder
+	messageQuerySentAfter8    = messageSelect8 + messageWhereConversationIDAndSentAfter + messageOrder
+	messageQuerySentAfter20   = messageSelect20 + messageWhereConversationIDAndSentAfter + messageOrder
+	messageQuerySentAfter23   = messageSelect23 + messageWhereConversationIDAndSentAfter + messageOrder
+	messageQuerySentAfter88   = messageSelect88 + messageWhereConversationIDAndSentAfter + messageOrder
+	messageQuerySentAfter1270 = messageSelect1270 + messageWhereConversationIDAndSentAfter + messageOrder
 
-	messageQuerySentBetween8  = messageSelect8 + messageWhereConversationIDAndSentBetween + messageOrder
-	messageQuerySentBetween20 = messageSelect20 + messageWhereConversationIDAndSentBetween + messageOrder
-	messageQuerySentBetween88 = messageSelect88 + messageWhereConversationIDAndSentBetween + messageOrder
+	messageQuerySentBetween8    = messageSelect8 + messageWhereConversationIDAndSentBetween + messageOrder
+	messageQuerySentBetween20   = messageSelect20 + messageWhereConversationIDAndSentBetween + messageOrder
+	messageQuerySentBetween23   = messageSelect23 + messageWhereConversationIDAndSentBetween + messageOrder
+	messageQuerySentBetween88   = messageSelect88 + messageWhereConversationIDAndSentBetween + messageOrder
+	messageQuerySentBetween1270 = messageSelect1270 + messageWhereConversationIDAndSentBetween + messageOrder
 )
 
 const (
-	messageColumnConversationID = iota
-	messageColumnID
+	messageColumnID = iota
+	messageColumnConversationID
+	messageColumnSourceID
 	messageColumnType
 	messageColumnBody
 	messageColumnJSON
 	messageColumnSentAt
+	messageColumnReceivedAtMS
 )
 
 type messageJSON struct {
-	Attachments  []attachmentJSON `json:"attachments"`
-	ReceivedAt   int64            `json:"received_at"`
-	ReceivedAtMS int64            `json:"received_at_ms"`
-	Mentions     []mentionJSON    `json:"bodyRanges"`
-	Reactions    []reactionJSON   `json:"reactions"`
-	Quote        *quoteJSON       `json:"quote"`
-	Edits        []editJSON       `json:"editHistory"`
+	Attachments []attachmentJSON `json:"attachments"`
+	Mentions    []mentionJSON    `json:"bodyRanges"`
+	Reactions   []reactionJSON   `json:"reactions"`
+	Quote       *quoteJSON       `json:"quote"`
+	Edits       []editJSON       `json:"editHistory"`
 }
 
 type Message struct {
+	ID           string
 	Conversation *Recipient
 	Source       *Recipient
 	TimeSent     int64
@@ -141,8 +184,12 @@ func (c *Context) ConversationMessages(conv *Conversation, ival Interval) ([]Mes
 func (c *Context) allConversationMessages(conv *Conversation) ([]Message, error) {
 	var query string
 	switch {
+	case c.dbVersion >= 1270:
+		query = messageQuery1270
 	case c.dbVersion >= 88:
 		query = messageQuery88
+	case c.dbVersion >= 23:
+		query = messageQuery23
 	case c.dbVersion >= 20:
 		query = messageQuery20
 	default:
@@ -164,8 +211,12 @@ func (c *Context) allConversationMessages(conv *Conversation) ([]Message, error)
 func (c *Context) conversationMessagesSentBefore(conv *Conversation, max time.Time) ([]Message, error) {
 	var query string
 	switch {
+	case c.dbVersion >= 1270:
+		query = messageQuerySentBefore1270
 	case c.dbVersion >= 88:
 		query = messageQuerySentBefore88
+	case c.dbVersion >= 23:
+		query = messageQuerySentBefore23
 	case c.dbVersion >= 20:
 		query = messageQuerySentBefore20
 	default:
@@ -191,8 +242,12 @@ func (c *Context) conversationMessagesSentBefore(conv *Conversation, max time.Ti
 func (c *Context) conversationMessagesSentAfter(conv *Conversation, min time.Time) ([]Message, error) {
 	var query string
 	switch {
+	case c.dbVersion >= 1270:
+		query = messageQuerySentAfter1270
 	case c.dbVersion >= 88:
 		query = messageQuerySentAfter88
+	case c.dbVersion >= 23:
+		query = messageQuerySentAfter23
 	case c.dbVersion >= 20:
 		query = messageQuerySentAfter20
 	default:
@@ -218,8 +273,12 @@ func (c *Context) conversationMessagesSentAfter(conv *Conversation, min time.Tim
 func (c *Context) conversationMessagesSentBetween(conv *Conversation, min, max time.Time) ([]Message, error) {
 	var query string
 	switch {
+	case c.dbVersion >= 1270:
+		query = messageQuerySentBetween1270
 	case c.dbVersion >= 88:
 		query = messageQuerySentBetween88
+	case c.dbVersion >= 23:
+		query = messageQuerySentBetween23
 	case c.dbVersion >= 20:
 		query = messageQuerySentBetween20
 	default:
@@ -267,8 +326,8 @@ func (c *Context) messages(stmt *sqlcipher.Stmt) ([]Message, error) {
 			msg.Conversation = rpt
 		}
 
-		if stmt.ColumnType(messageColumnID) != sqlcipher.ColumnTypeNull {
-			id := stmt.ColumnText(messageColumnID)
+		if stmt.ColumnType(messageColumnSourceID) != sqlcipher.ColumnTypeNull {
+			id := stmt.ColumnText(messageColumnSourceID)
 			rpt, err := c.recipientFromConversationID(id)
 			if err != nil {
 				stmt.Finalize()
@@ -280,12 +339,21 @@ func (c *Context) messages(stmt *sqlcipher.Stmt) ([]Message, error) {
 			msg.Source = rpt
 		}
 
+		msg.ID = stmt.ColumnText(messageColumnID)
 		msg.Type = stmt.ColumnText(messageColumnType)
 		msg.Body.Text = stmt.ColumnText(messageColumnBody)
 		msg.JSON = stmt.ColumnText(messageColumnJSON)
 		msg.TimeSent = stmt.ColumnInt64(messageColumnSentAt)
+		msg.TimeRecv = stmt.ColumnInt64(messageColumnReceivedAtMS)
 
-		if err := c.parseMessageJSON(&msg); err != nil {
+		jmsg, err := c.parseMessageJSON(&msg)
+		if err != nil {
+			stmt.Finalize()
+			return nil, err
+		}
+
+		msg.Attachments, err = c.attachmentsForMessage(&msg, jmsg.Attachments)
+		if err != nil {
 			stmt.Finalize()
 			return nil, err
 		}
@@ -321,36 +389,25 @@ func (c *Context) messages(stmt *sqlcipher.Stmt) ([]Message, error) {
 	return msgs, stmt.Finalize()
 }
 
-func (c *Context) parseMessageJSON(msg *Message) error {
+func (c *Context) parseMessageJSON(msg *Message) (messageJSON, error) {
 	var jmsg messageJSON
 	var err error
 	if err = json.Unmarshal([]byte(msg.JSON), &jmsg); err != nil {
-		return fmt.Errorf("cannot parse message JSON data: %w", err)
+		return jmsg, fmt.Errorf("cannot parse message JSON data: %w", err)
 	}
-	// For older messages, the received time is stored in the "received_at"
-	// attribute. For newer messages, it is in the new "received_at_ms"
-	// attribute (and the "received_at" attribute was changed to store a
-	// counter). See Signal-Desktop commit
-	// d82ce079421c3fa08a0920a90b7abc19b1bb0e59.
-	if jmsg.ReceivedAtMS != 0 {
-		msg.TimeRecv = jmsg.ReceivedAtMS
-	} else {
-		msg.TimeRecv = jmsg.ReceivedAt
-	}
-	msg.Attachments = c.parseAttachmentJSON(msg, jmsg.Attachments)
 	if msg.Body.Mentions, err = c.parseMentionJSON(jmsg.Mentions); err != nil {
-		return err
+		return jmsg, err
 	}
 	if msg.Quote, err = c.parseQuoteJSON(jmsg.Quote); err != nil {
-		return err
+		return jmsg, err
 	}
 	if err = c.parseReactionJSON(msg, &jmsg); err != nil {
-		return err
+		return jmsg, err
 	}
 	if err = c.parseEditJSON(msg, &jmsg); err != nil {
-		return err
+		return jmsg, err
 	}
-	return nil
+	return jmsg, nil
 }
 
 func (m *Message) logError(err error, format string, a ...any) {

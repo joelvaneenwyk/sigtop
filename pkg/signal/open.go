@@ -113,23 +113,23 @@ func databaseAndEncryptionKeys(appName, dir string, encKey *safestorage.RawEncry
 	}
 
 	var config struct {
-		LegacyKey          *string `json:"key"`
-		ModernKey          *string `json:"encryptedKey"`
+		LegacyDBKey        *string `json:"key"`
+		ModernDBKey        *string `json:"encryptedKey"`
 		SafeStorageBackend *string `json:"safeStorageBackend"`
 	}
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, nil, fmt.Errorf("cannot parse %s: %w", configFile, err)
 	}
 
-	if config.LegacyKey != nil && encKey == nil {
-		return []byte(*config.LegacyKey), nil, nil
+	if config.LegacyDBKey != nil && encKey == nil {
+		return []byte(*config.LegacyDBKey), nil, nil
 	}
 
-	if config.ModernKey == nil {
+	if config.ModernDBKey == nil {
 		return nil, nil, fmt.Errorf("encrypted database key not found")
 	}
 
-	dbKey, err := hex.DecodeString(*config.ModernKey)
+	encryptedDBKey, err := hex.DecodeString(*config.ModernDBKey)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid encrypted database key: %w", err)
 	}
@@ -145,7 +145,7 @@ func databaseAndEncryptionKeys(appName, dir string, encKey *safestorage.RawEncry
 		}
 	}
 
-	dbKey, err = app.Decrypt(dbKey)
+	dbKey, err := app.Decrypt(encryptedDBKey)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot decrypt database key: %w", err)
 	}
@@ -170,4 +170,19 @@ func (c *Context) DatabaseKey() ([]byte, error) {
 		return nil, fmt.Errorf("database key not available")
 	}
 	return c.dbKey, nil
+}
+
+func ImportEncryptionKey(betaApp bool, dir string, key []byte) error {
+	appName := AppName
+	if betaApp {
+		appName = AppNameBeta
+	}
+
+	app := safestorage.NewApp(appName, dir)
+
+	if err := app.StoreEncryptionKey(key); err != nil {
+		return fmt.Errorf("cannot import encryption key: %w", err)
+	}
+
+	return nil
 }
