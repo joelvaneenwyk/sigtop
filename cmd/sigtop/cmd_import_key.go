@@ -12,23 +12,23 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package main
+package cmds
 
 import (
 	"io"
 	"log"
 	"os"
 
+	"github.com/joelvaneenwyk/sigtop/pkg/getopt"
+	"github.com/joelvaneenwyk/sigtop/pkg/signal"
 	"github.com/tbvdm/go-openbsd"
-	"github.com/tbvdm/sigtop/getopt"
-	"github.com/tbvdm/sigtop/signal"
 )
 
 var cmdImportKeyEntry = cmdEntry{
-	name:  "import-key",
-	alias: "",
-	usage: "[-B] [-d signal-directory] [file]",
-	exec:  cmdImportKey,
+	Name:    "import-key",
+	Alias:   "",
+	Usage:   "[-B] [-d signal-directory] [file]",
+	Execute: cmdImportKey,
 }
 
 func cmdImportKey(args []string) cmdStatus {
@@ -50,7 +50,7 @@ func cmdImportKey(args []string) cmdStatus {
 
 	args = getopt.Args()
 	if len(args) > 1 {
-		return cmdUsage
+		return CommandUsage
 	}
 
 	var key []byte
@@ -83,5 +83,5 @@ func cmdImportKey(args []string) cmdStatus {
 		log.Fatal(err)
 	}
 
-	return cmdOK
+	return CommandOK
 }

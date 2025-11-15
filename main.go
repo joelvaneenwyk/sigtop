@@ -20,37 +20,7 @@ import (
 
 	cmds "github.com/joelvaneenwyk/sigtop/cmd/sigtop"
 	"github.com/tbvdm/go-cli"
-	"github.com/tbvdm/go-openbsd"
-	"github.com/tbvdm/sigtop/getopt"
-	"github.com/tbvdm/sigtop/safestorage"
-	"github.com/tbvdm/sigtop/signal"
 )
-
-type cmdStatus int
-
-const (
-	cmdOK cmdStatus = iota
-	cmdError
-	cmdUsage
-)
-
-type cmdEntry struct {
-	name  string
-	alias string
-	usage string
-	exec  func([]string) cmdStatus
-}
-
-var cmdEntries = []cmdEntry{
-	cmdCheckDatabaseEntry,
-	cmdExportAvatarsEntry,
-	cmdExportAttachmentsEntry,
-	cmdExportDatabaseEntry,
-	cmdExportKeyEntry,
-	cmdExportMessagesEntry,
-	cmdImportKeyEntry,
-	cmdQueryDatabaseEntry,
-}
 
 func main() {
 	cli.SetLog()
@@ -67,96 +37,7 @@ func main() {
 	switch cmd.Execute(os.Args[2:]) {
 	case cmds.CommandError:
 		os.Exit(1)
-	case cmdUsage:
-		cli.ExitUsage(cmd.name, cmd.usage)
+	case cmds.CommandUsage:
+		cli.ExitUsage(cmd.Name, cmd.Usage)
 	}
-}
-
-func command(name string) *cmdEntry {
-	for _, cmd := range cmdEntries {
-		if cmd.name == name || (cmd.alias != "" && cmd.alias == name) {
-			return &cmd
-		}
-	}
-	return nil
-}
-
-func encryptionKeyFromArgument(keyfile getopt.Arg) (*safestorage.RawEncryptionKey, error) {
-	if !keyfile.Set() {
-		return nil, nil
-	}
-
-	system, file, found := strings.Cut(keyfile.String(), ":")
-	if !found {
-		system, file = file, system
-	}
-
-	f := os.Stdin
-	if file != "-" {
-		var err error
-		if f, err = os.Open(file); err != nil {
-			return nil, err
-		}
-		defer f.Close()
-	}
-
-	s := bufio.NewScanner(f)
-	s.Scan()
-	if s.Err() != nil {
-		return nil, s.Err()
-	}
-
-	key := safestorage.RawEncryptionKey{
-		Key: append([]byte{}, s.Bytes()...),
-		OS:  system,
-	}
-
-	return &key, nil
-}
-
-func signalDirFromArgument(dir getopt.Arg, beta bool) (string, error) {
-	if dir.Set() {
-		return dir.String(), nil
-	}
-	return signal.DesktopDir(beta)
-}
-
-func intervalFromArgument(ival getopt.Arg) (signal.Interval, error) {
-	if !ival.Set() {
-		return signal.Interval{}, nil
-	}
-	return parseInterval(ival.String())
-}
-
-func unveilSignalDir(dir string) error {
-	if err := openbsd.Unveil(dir, "r"); err != nil {
-		return err
-	}
-
-	// SQLite/SQLCipher needs to create the WAL and shared-memory files if
-	// they don't exist already. See https://www.sqlite.org/tempfiles.html.
-
-	walFile := filepath.Join(dir, signal.DatabaseFile+"-wal")
-	shmFile := filepath.Join(dir, signal.DatabaseFile+"-shm")
-
-	if err := openbsd.Unveil(walFile, "rwc"); err != nil {
-		return err
-	}
-
-	if err := openbsd.Unveil(shmFile, "rwc"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func recipientFilename(rpt *signal.Recipient, ext string) string {
-	return recipientFilenameWithDetail(rpt, "", ext)
-}
-
-func recipientFilenameWithDetail(rpt *signal.Recipient, detail, ext string) string {
-	if detail != "" {
-		detail = " (" + detail + ")"
-	}
-	return sanitiseFilename(rpt.DetailedDisplayName() + detail + ext)
 }

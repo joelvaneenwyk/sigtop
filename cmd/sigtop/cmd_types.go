@@ -33,6 +33,8 @@ var cmdEntries = []cmdEntry{
 	cmdExportAttachmentsEntry,
 	cmdExportDatabaseEntry,
 	cmdHelpEntry,
+	cmdExportKeyEntry,
+	cmdImportKeyEntry,
 	cmdExportMessagesEntry,
 	cmdQueryDatabaseEntry,
 }
@@ -46,7 +48,7 @@ func Command(name string) *cmdEntry {
 	return nil
 }
 
-func encryptionKeyFromFile(keyfile getopt.Arg) (*safestorage.RawEncryptionKey, error) {
+func encryptionKeyFromArgument(keyfile getopt.Arg) (*safestorage.RawEncryptionKey, error) {
 	if !keyfile.Set() {
 		return nil, nil
 	}
@@ -79,6 +81,20 @@ func encryptionKeyFromFile(keyfile getopt.Arg) (*safestorage.RawEncryptionKey, e
 	return &key, nil
 }
 
+func signalDirFromArgument(dir getopt.Arg, beta bool) (string, error) {
+	if dir.Set() {
+		return dir.String(), nil
+	}
+	return signal.DesktopDir(beta)
+}
+
+func intervalFromArgument(ival getopt.Arg) (signal.Interval, error) {
+	if !ival.Set() {
+		return signal.Interval{}, nil
+	}
+	return parseInterval(ival.String())
+}
+
 func unveilSignalDir(dir string) error {
 	if err := openbsd.Unveil(dir, "r"); err != nil {
 		return err
@@ -102,5 +118,12 @@ func unveilSignalDir(dir string) error {
 }
 
 func recipientFilename(rpt *signal.Recipient, ext string) string {
-	return sanitiseFilename(rpt.DetailedDisplayName() + ext)
+	return recipientFilenameWithDetail(rpt, "", ext)
+}
+
+func recipientFilenameWithDetail(rpt *signal.Recipient, detail, ext string) string {
+	if detail != "" {
+		detail = " (" + detail + ")"
+	}
+	return sanitiseFilename(rpt.DetailedDisplayName() + detail + ext)
 }
