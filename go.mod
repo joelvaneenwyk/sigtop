@@ -1,6 +1,6 @@
 module github.com/joelvaneenwyk/sigtop
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.24.4
 
@@ -8,8 +8,7 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/tbvdm/go-cli v0.1.0
 	github.com/tbvdm/go-openbsd v0.5.0
-	github.com/tbvdm/sigtop v0.22.0
-	golang.org/x/crypto v0.41.0
-	golang.org/x/sys v0.35.0
-	golang.org/x/text v0.28.0
+	golang.org/x/crypto v0.45.0
+	golang.org/x/sys v0.38.0
+	golang.org/x/text v0.31.0
 )
