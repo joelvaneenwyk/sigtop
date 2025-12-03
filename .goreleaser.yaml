@@ -22,6 +22,21 @@ builds:
       - linux
       - darwin
       - windows
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+    overrides:
+      - goos: darwin
+        goarch: amd64
+        env:
+          - CGO_ENABLED=1
+          - CGO_CFLAGS=-Wno-unused-command-line-argument
+      - goos: darwin
+        goarch: arm64
+        env:
+          - CGO_ENABLED=1
+          - CGO_CFLAGS=-Wno-unused-command-line-argument
 
 archives:
   - formats: ['zip', 'tar.gz']
